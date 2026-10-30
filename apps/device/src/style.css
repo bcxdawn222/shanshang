@@ -1,0 +1,59 @@
+html,
+body {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  font-family: -apple-system, 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  background: radial-gradient(circle at 30% 20%, #2a1f4f, #0b0b16 70%);
+  color: #f2f3f7;
+  touch-action: manipulation;
+  user-select: none;
+}
+
+#app {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 48px;
+  text-align: center;
+  padding: 0 6vw;
+  box-sizing: border-box;
+}
+
+.brand {
+  margin: 0;
+  font-size: clamp(40px, 6vw, 88px);
+  letter-spacing: 0.08em;
+  background: linear-gradient(90deg, #ff4fd8, #6c8cff);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.view p {
+  margin: 12px 0;
+  font-size: clamp(18px, 2.4vw, 32px);
+  color: #c9cbd6;
+}
+
+.code {
+  margin: 24px 0;
+  font-family: Consolas, 'Courier New', monospace;
+  font-size: clamp(56px, 9vw, 140px);
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  color: #fff;
+}
+
+.hint {
+  font-size: clamp(14px, 1.8vw, 22px) !important;
+  color: #8a8fa3 !important;
+}
+
+.error {
+  color: #ff8a8a !important;
+}

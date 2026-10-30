@@ -1,0 +1,15 @@
+{
+  "name": "@shanshang/device",
+  "version": "0.1.0",
+  "private": true,
+  "description": "闪裳Live 设备前台（广告机）：开机注册、显示设备码、等待绑定",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "devDependencies": {
+    "vite": "8.3.5"
+  }
+}
