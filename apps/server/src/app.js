@@ -21,6 +21,8 @@ import adminSnapshotRoutes from './routes/adminSnapshots.js';
 import deviceSnapshotRoutes from './routes/deviceSnapshots.js';
 import merchantRedeemRoutes from './routes/merchantRedeem.js';
 import snapshotPageRoutes from './routes/snapshotPage.js';
+import adminFunRoutes from './routes/adminFun.js';
+import deviceFunRoutes from './routes/deviceFun.js';
 
 // 服饰图单张上限
 export const MAX_IMAGE_BYTES = 10 * 1024 * 1024;
@@ -104,6 +106,8 @@ export async function buildApp({
     deviceSnapshotRoutes,
     merchantRedeemRoutes,
     adminSnapshotRoutes,
+    adminFunRoutes,
+    deviceFunRoutes,
   ]) {
     await app.register(routes, { prefix: '/api', ctx });
   }
