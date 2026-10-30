@@ -48,6 +48,35 @@ export const STATUS_TAG = {
   bound: 'success',
 };
 
+/** 积分流水类型（接口约定 Phase 3 §1） */
+export const LEDGER_TYPE_TEXT = {
+  ADMIN_ADD: '平台加积分',
+  ADMIN_DEDUCT: '平台扣积分',
+  TRYON_CONSUME: '试穿消耗',
+  REFUND: '退还',
+};
+
+export const LEDGER_TYPE_TAG = {
+  ADMIN_ADD: 'success',
+  ADMIN_DEDUCT: 'warning',
+  TRYON_CONSUME: 'info',
+  REFUND: 'primary',
+};
+
+/** 毫秒时长 → 时:分:秒 */
+export function fmtDuration(ms) {
+  const total = Math.max(Math.floor((ms || 0) / 1000), 0);
+  const p = (n) => String(n).padStart(2, '0');
+  return `${Math.floor(total / 3600)}:${p(Math.floor((total % 3600) / 60))}:${p(total % 60)}`;
+}
+
+/** 积分显示：保留 2 位小数；signed 时正数带 + */
+export function fmtPoints(v, signed = false) {
+  const n = Number(v ?? 0);
+  const s = n.toFixed(2);
+  return signed && n > 0 ? `+${s}` : s;
+}
+
 export function fmtTime(ms) {
   if (!ms) return '—';
   const d = new Date(ms);

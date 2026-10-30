@@ -26,7 +26,7 @@
 </template>
 
 <script setup>
-import { CollectionTag, Document, Key, Monitor, Picture, Setting, Shop, User } from '@element-plus/icons-vue';
+import { Coin, CollectionTag, Document, Key, Monitor, Picture, Setting, Shop, User, Wallet } from '@element-plus/icons-vue';
 import { computed } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import Brand from '../components/Brand.vue';
@@ -44,6 +44,7 @@ const menus = computed(() =>
         { path: '/admin/garments', title: '服饰审核', icon: Picture },
         { path: '/admin/dicts', title: '标签字典', icon: CollectionTag },
         { path: '/admin/devices', title: '设备管理', icon: Monitor },
+        { path: '/admin/points', title: '积分管理', icon: Coin },
         { path: '/admin/settings', title: '平台设置', icon: Setting },
         { path: '/admin/audit-logs', title: '操作日志', icon: Document },
         { path: '/admin/password', title: '修改口令', icon: Key },
@@ -51,6 +52,7 @@ const menus = computed(() =>
     : [
         { path: '/merchant/home', title: '账号概览', icon: User },
         { path: '/merchant/garments', title: '我的服饰', icon: Picture },
+        { path: '/merchant/points', title: '积分与充值', icon: Wallet },
         { path: '/merchant/password', title: '修改密码', icon: Key },
       ],
 );

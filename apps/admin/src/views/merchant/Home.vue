@@ -13,6 +13,30 @@
       :sub-title="`原因：${m.reviewNote || '未填写'}。如有疑问请联系平台管理员。`"
     />
 
+    <el-alert
+      v-if="points?.hidden"
+      type="error"
+      show-icon
+      :closable="false"
+      class="card"
+      :title="`余额低于 ${fmtPoints(points.hideThreshold)} 积分，服饰已暂停在设备展示，请充值`"
+    />
+
+    <el-card v-if="account.status === 'approved' && points" shadow="never" class="card">
+      <template #header>
+        <div class="page-head" style="margin: 0">
+          <span>积分余额</span>
+          <el-button link type="primary" @click="router.push('/merchant/points')">积分与充值</el-button>
+        </div>
+      </template>
+      <el-descriptions :column="2" border>
+        <el-descriptions-item label="当前余额">
+          <span :style="points.balance < 0 ? { color: 'var(--el-color-danger)' } : undefined">{{ fmtPoints(points.balance) }} 积分</span>
+        </el-descriptions-item>
+        <el-descriptions-item label="累计试穿时长">{{ fmtDuration(points.usageMs) }}</el-descriptions-item>
+      </el-descriptions>
+    </el-card>
+
     <el-card shadow="never" class="card">
       <template #header>账号信息</template>
       <el-descriptions :column="2" border>
@@ -51,9 +75,12 @@
 import { ElMessage } from 'element-plus';
 import { computed, onMounted, reactive, ref } from 'vue';
 import { api } from '../../api.js';
-import { STATUS_TAG, STATUS_TEXT, fmtTime, store } from '../../store.js';
+import { useRouter } from 'vue-router';
+import { STATUS_TAG, STATUS_TEXT, fmtDuration, fmtPoints, fmtTime, store } from '../../store.js';
 
+const router = useRouter();
 const account = ref(null);
+const points = ref(null);
 const m = computed(() => account.value?.merchant ?? {});
 const form = reactive({ nickname: '', shopLocation: '' });
 const saving = ref(false);
@@ -70,6 +97,11 @@ onMounted(async () => {
     fill((await api('merchant/profile')).account);
   } catch (e) {
     ElMessage.error(e.message);
+    return;
+  }
+  // 积分接口只对已审核商家开放；失败不打扰（服务端未就绪时也不影响概览）
+  if (account.value?.status === 'approved') {
+    points.value = await api('merchant/points').catch(() => null);
   }
 });
 

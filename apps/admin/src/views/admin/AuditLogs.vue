@@ -44,6 +44,9 @@ const ACTION_TEXT = {
   'device.disable': '停用设备',
   'device.enable': '启用设备',
   'settings.update': '修改平台设置',
+  'points.add': '加积分',
+  'points.deduct': '扣积分',
+  'points.config': '修改积分配置',
   'account.password_change': '修改密码',
 };
 
