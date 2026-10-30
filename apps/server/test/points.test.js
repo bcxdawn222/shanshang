@@ -277,6 +277,7 @@ test('积分配置：部分更新、范围校验、写审计；收款码上传�
     rechargeContact: '',
     rechargeQrUrl: '',
     tryonMaxMinutes: 5,
+    idleMinutes: 4,
   });
 
   const put = (payload) => s.inject('PUT', '/api/admin/points/config', s.admin, payload);
@@ -434,5 +435,5 @@ test('心跳与背景：未绑定也可心跳；2 分钟内在线；总后台设
 
   await s.inject('PUT', '/api/admin/settings', s.admin, { platformName: '闪裳测试' });
   const cfg = await s.h.app.inject({ method: 'GET', url: '/api/device/config', headers: bearer(dev.token) });
-  assert.deepEqual(cfg.json(), { platformName: '闪裳测试', logoUrl: '', background: 'white', tryonMaxMinutes: 5 });
+  assert.deepEqual(cfg.json(), { platformName: '闪裳测试', logoUrl: '', background: 'white', tryonMaxMinutes: 5, idleMinutes: 4 });
 });

@@ -14,6 +14,8 @@ const CONFIG_MAP = {
   rechargeContact: { key: 'recharge_contact', fallback: '' },
   rechargeQrUrl: { key: 'recharge_qr_url', fallback: '' },
   tryonMaxMinutes: { key: 'tryon_max_minutes', number: true, fallback: 5 },
+  // 无操作多少分钟进入待机播放（Phase 4）
+  idleMinutes: { key: 'idle_minutes', number: true, fallback: 4 },
 };
 
 /**

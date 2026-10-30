@@ -1,6 +1,13 @@
 const PNG_MAGIC = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]);
+const WEBM_MAGIC = Buffer.from([0x1a, 0x45, 0xdf, 0xa3]);
 
-export const MIME_BY_EXT = { jpg: 'image/jpeg', png: 'image/png', webp: 'image/webp' };
+export const MIME_BY_EXT = {
+  jpg: 'image/jpeg',
+  png: 'image/png',
+  webp: 'image/webp',
+  mp4: 'video/mp4',
+  webm: 'video/webm',
+};
 
 /** 按文件头判断图片类型，不信任客户端传的 Content-Type 和文件名 */
 export function detectImage(buf) {
@@ -9,5 +16,12 @@ export function detectImage(buf) {
   if (buf.length >= 12 && buf.toString('ascii', 0, 4) === 'RIFF' && buf.toString('ascii', 8, 12) === 'WEBP') {
     return { mime: 'image/webp', ext: 'webp' };
   }
+  return null;
+}
+
+/** 按文件头判断视频类型：MP4 偏移 4 为 'ftyp'；WebM 为 EBML 头 1A 45 DF A3 */
+export function detectVideo(buf) {
+  if (buf.length >= 8 && buf.toString('ascii', 4, 8) === 'ftyp') return { mime: 'video/mp4', ext: 'mp4' };
+  if (buf.length >= 4 && buf.subarray(0, 4).equals(WEBM_MAGIC)) return { mime: 'video/webm', ext: 'webm' };
   return null;
 }

@@ -8,6 +8,7 @@ import { FailureLimiter, WindowLimiter } from './lib/limiter.js';
 import { SESSION_COOKIE, loadSession } from './lib/session.js';
 import { createLocalStorage } from './lib/storage.js';
 import adminRoutes from './routes/admin.js';
+import adminAdsRoutes from './routes/adminAds.js';
 import adminGarmentRoutes from './routes/adminGarments.js';
 import adminPointsRoutes from './routes/adminPoints.js';
 import authRoutes from './routes/auth.js';
@@ -19,12 +20,23 @@ import publicRoutes from './routes/public.js';
 
 // 服饰图单张上限
 export const MAX_IMAGE_BYTES = 10 * 1024 * 1024;
+// 广告视频上限（只在素材上传路由里放宽，其他上传仍按 10MB）
+export const MAX_VIDEO_BYTES = 200 * 1024 * 1024;
 
 /**
  * 组装应用。db、fetch、时钟都从外面注入，测试时用内存库、假 Xmax 和可拨动的时钟。
  * 所有接口挂在 /api 下；nginx 的 /sl/ 前缀在反代时去掉。
  */
-export async function buildApp({ config, db, storage, fetchImpl = globalThis.fetch, now = Date.now, logger = false }) {
+export async function buildApp({
+  config,
+  db,
+  storage,
+  fetchImpl = globalThis.fetch,
+  now = Date.now,
+  logger = false,
+  // 测试可调小，避免构造 200MB 请求
+  uploadLimits = { image: MAX_IMAGE_BYTES, video: MAX_VIDEO_BYTES },
+}) {
   // removeAdditional=false：多余字段直接 400，而不是被悄悄删掉（例如商家试图改品牌名）
   const app = Fastify({
     logger,
@@ -42,6 +54,7 @@ export async function buildApp({ config, db, storage, fetchImpl = globalThis.fet
     storage: storage ?? createLocalStorage(path.join(config.dataDir, 'media')),
     fetchImpl,
     now,
+    uploadLimits,
     limiters: {
       login: new FailureLimiter({ maxFailures: 5, lockMs: 15 * 60_000, now }),
       register: new WindowLimiter({ limit: 10, windowMs: 60 * 60_000, now }),
@@ -79,6 +92,7 @@ export async function buildApp({ config, db, storage, fetchImpl = globalThis.fet
     adminRoutes,
     adminGarmentRoutes,
     adminPointsRoutes,
+    adminAdsRoutes,
     deviceRoutes,
   ]) {
     await app.register(routes, { prefix: '/api', ctx });

@@ -9,7 +9,7 @@ import { createLocalStorage } from '../src/lib/storage.js';
 export const ADMIN = { username: 'root', password: 'admin-pass-1234' };
 
 /** 内存库 + 假 Xmax + 可拨动时钟 */
-export async function makeApp({ env = {}, fetchImpl } = {}) {
+export async function makeApp({ env = {}, fetchImpl, uploadLimits } = {}) {
   const db = openDb(':memory:');
   let clock = Date.UTC(2026, 9, 30, 8, 0, 0);
   const now = () => clock;
@@ -33,7 +33,7 @@ export async function makeApp({ env = {}, fetchImpl } = {}) {
   // 每个测试一个临时媒体目录，结束即删
   const mediaDir = fs.mkdtempSync(path.join(os.tmpdir(), 'shanshang-media-'));
   const storage = createLocalStorage(mediaDir);
-  const app = await buildApp({ config, db, storage, fetchImpl: fakeFetch, now });
+  const app = await buildApp({ config, db, storage, fetchImpl: fakeFetch, now, ...(uploadLimits ? { uploadLimits } : {}) });
   return {
     app,
     db,

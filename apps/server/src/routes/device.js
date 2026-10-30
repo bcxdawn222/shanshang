@@ -1,6 +1,7 @@
-import { loadDicts, promoteDue } from '../lib/garments.js';
+import { deviceDramas, deviceHot, devicePlaylist } from '../lib/ads.js';
+import { deviceGarments } from '../lib/garments.js';
 import { HttpError, isUniqueViolation } from '../lib/http.js';
-import { consumeSegments, getPointsConfig, toMilli } from '../lib/points.js';
+import { consumeSegments, getPointsConfig } from '../lib/points.js';
 import { getSettings } from '../lib/settings.js';
 import { randomCode, randomToken, sha256 } from '../lib/tokens.js';
 import { issueTemporaryKey } from '../lib/xmax.js';
@@ -85,12 +86,12 @@ export default async function deviceRoutes(app, { ctx }) {
     serverTime: now(),
   }));
 
-  // 设备前台配置：平台名、Logo、背景、单次试穿上限
+  // 设备前台配置：平台名、Logo、背景、单次试穿上限、无操作进入待机的分钟数
   app.get('/device/config', { preValidation: deviceAuth }, async (request) => {
     requireBound(request);
     const { platformName, logoUrl } = getSettings(db);
-    const { tryonMaxMinutes } = getPointsConfig(db);
-    return { platformName, logoUrl, background: request.device.background, tryonMaxMinutes };
+    const { tryonMaxMinutes, idleMinutes } = getPointsConfig(db);
+    return { platformName, logoUrl, background: request.device.background, tryonMaxMinutes, idleMinutes };
   });
 
   // 离屏时长上报：按 device_id + session_id + seq 幂等扣费到服饰所属商家，允许透支
@@ -130,37 +131,24 @@ export default async function deviceRoutes(app, { ctx }) {
   // 设备服饰清单：已上架、审核期已到、商家正常且余额不低于隐藏阈值的服饰。xmaxUrl 为空时设备用官方 SDK 兜底上传 imagePath
   app.get('/device/garments', { preValidation: deviceAuth }, async (request) => {
     requireBound(request);
-    const t = now();
-    promoteDue(db, t);
-    const dicts = loadDicts(db);
-    const name = (id) => dicts.get(id)?.name ?? '';
-    const rows = db
-      .prepare(
-        `SELECT g.*, m.brand_name, m.shop_location AS merchant_location
-           FROM garment g
-           JOIN account a ON a.id = g.merchant_id
-           JOIN merchant m ON m.account_id = g.merchant_id
-          WHERE g.deleted_at IS NULL AND g.status = 'ready' AND g.available_at <= ? AND a.status = 'approved'
-            AND m.balance_milli >= ?
-          ORDER BY g.merchant_id, g.id`,
-      )
-      .all(t, toMilli(getPointsConfig(db).hideThreshold));
-    return {
-      items: rows.map((g) => ({
-        id: g.id,
-        merchantId: g.merchant_id,
-        brandName: g.brand_name,
-        title: g.title,
-        gender: g.gender,
-        setType: g.set_type,
-        category: name(g.category_id),
-        color: name(g.color_id),
-        scenes: JSON.parse(g.scene_ids).map(name).filter(Boolean),
-        discountText: g.discount_text,
-        shopLocation: g.shop_location || g.merchant_location,
-        imagePath: `media/${g.image_key}`,
-        xmaxUrl: g.xmax_url,
-      })),
-    };
+    return { items: deviceGarments(db, now()) };
+  });
+
+  // 待机播放列表：本设备有配置用本设备的，否则用默认列表；version 为内容哈希
+  app.get('/device/playlist', { preValidation: deviceAuth }, async (request) => {
+    requireBound(request);
+    return devicePlaylist(db, request.device.id);
+  });
+
+  // 热门榜：近 7 天试穿次数 + 人工置顶 / 移出，只含设备可见服饰，最多 20 条
+  app.get('/device/hot', { preValidation: deviceAuth }, async (request) => {
+    requireBound(request);
+    return { items: deviceHot(db, now()) };
+  });
+
+  // 短剧专题：只返回启用的专题；garmentIds 只保留设备可见服饰，保持专题内顺序
+  app.get('/device/dramas', { preValidation: deviceAuth }, async (request) => {
+    requireBound(request);
+    return { items: deviceDramas(db, now()) };
   });
 }

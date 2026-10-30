@@ -1,5 +1,6 @@
 import { HttpError } from './http.js';
 import { MIME_BY_EXT } from './images.js';
+import { getPointsConfig, toMilli } from './points.js';
 import { uploadImage } from './xmax.js';
 
 export const GENDERS = { female: '女', male: '男', kid: '童' };
@@ -15,6 +16,43 @@ export function promoteDue(db, nowMs) {
     `UPDATE garment SET status = 'ready', updated_at = ?
       WHERE status = 'reviewing' AND available_at <= ? AND deleted_at IS NULL`,
   ).run(nowMs, nowMs);
+}
+
+/**
+ * 设备可见服饰（设备服饰清单、热门榜、短剧专题共用同一口径）：
+ * 未删除、已上架、审核期已到、商家审核通过且余额不低于隐藏阈值。会先把到期的审核期服饰转上架。
+ * 返回设备端视图数组，按商家、id 排序。
+ */
+export function deviceGarments(db, nowMs) {
+  promoteDue(db, nowMs);
+  const dicts = loadDicts(db);
+  const name = (id) => dicts.get(id)?.name ?? '';
+  const rows = db
+    .prepare(
+      `SELECT g.*, m.brand_name, m.shop_location AS merchant_location
+         FROM garment g
+         JOIN account a ON a.id = g.merchant_id
+         JOIN merchant m ON m.account_id = g.merchant_id
+        WHERE g.deleted_at IS NULL AND g.status = 'ready' AND g.available_at <= ? AND a.status = 'approved'
+          AND m.balance_milli >= ?
+        ORDER BY g.merchant_id, g.id`,
+    )
+    .all(nowMs, toMilli(getPointsConfig(db).hideThreshold));
+  return rows.map((g) => ({
+    id: g.id,
+    merchantId: g.merchant_id,
+    brandName: g.brand_name,
+    title: g.title,
+    gender: g.gender,
+    setType: g.set_type,
+    category: name(g.category_id),
+    color: name(g.color_id),
+    scenes: JSON.parse(g.scene_ids).map(name).filter(Boolean),
+    discountText: g.discount_text,
+    shopLocation: g.shop_location || g.merchant_location,
+    imagePath: `media/${g.image_key}`,
+    xmaxUrl: g.xmax_url,
+  }));
 }
 
 export function loadDicts(db) {

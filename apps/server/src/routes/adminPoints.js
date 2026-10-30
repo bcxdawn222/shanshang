@@ -53,6 +53,7 @@ const configBody = {
     // 空串、站内媒体路径或 http(s) 地址
     rechargeQrUrl: { type: 'string', maxLength: 500, pattern: '^(|media/[A-Za-z0-9/._-]+|https?://\\S+)$' },
     tryonMaxMinutes: { type: 'integer', minimum: 1, maximum: 30 },
+    idleMinutes: { type: 'integer', minimum: 1, maximum: 60 },
   },
 };
 
