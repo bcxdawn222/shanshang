@@ -119,7 +119,7 @@ function resultEntry(gender, occasion, feeling) {
             state.result = result;
             state.sessionId = getDeviceSessionId();
             if (result.items.length) {
-              trackEvent('ai_recommend', { garment_ids: result.items.map((g) => g.id), question_key: questionKey });
+              trackEvent('ai_recommend', { garmentIds: result.items.map((g) => g.id), questionKey });
             }
             show(result);
           },

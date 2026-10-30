@@ -86,16 +86,26 @@ export function flushSegments({ keepalive = false } = {}) {
  * 一次试穿（进入试穿页到离开）的计时器。open 开始计一件，close 结束当前件并入队。
  * 计时用 performance.now()，不受系统时间调整影响。
  */
-export function createBilling() {
+export function createBilling({ onStart, onEnd } = {}) {
   const sessionId = randomSessionId(16);
   let seq = 0;
   let current = null;
+
+  // 埋点钩子（tryon_start / tryon_end）：与计费同一时机、同一时长，异常不影响计费
+  function notify(fn, ...args) {
+    try {
+      fn?.(...args);
+    } catch (error) {
+      console.warn('[segments] 埋点回调异常', error);
+    }
+  }
 
   function close({ keepalive = false } = {}) {
     if (!current) return;
     const { garmentId, startedAt } = current;
     current = null;
     const durationMs = Math.min(MAX_SEGMENT_MS, Math.max(0, Math.round(performance.now() - startedAt)));
+    notify(onEnd, { garmentId, durationMs }, { keepalive });
     if (durationMs <= 0) return;
     appendQueue([{ sessionId, seq: seq++, garmentId, durationMs }]);
     void flushSegments({ keepalive });
@@ -104,6 +114,7 @@ export function createBilling() {
   function open(garmentId) {
     close();
     current = { garmentId, startedAt: performance.now() };
+    notify(onStart, { garmentId });
   }
 
   return {

@@ -7,6 +7,7 @@ import { startIdleWatch } from './idle.js';
 import { refreshPlaylist } from './playlist.js';
 import { createRouter } from './router.js';
 import { flushSegments } from './segments.js';
+import { flushEvents } from './events.js';
 import { homeEntry } from './views/home.js';
 import { isPlayerActive, playerEntry } from './views/player.js';
 
@@ -15,6 +16,7 @@ const BOUND_POLL_MS = 60_000; // 已绑定后低频确认没被停用
 const RETRY_MS = 15000;
 const HEARTBEAT_MS = 30_000;
 const REFRESH_MS = 5 * 60_000; // 定时重拉配置和播放列表，后台改了投放不用重启
+const EVENTS_MS = 10_000; // 埋点批量上报间隔（满 50 条时 trackEvent 会提前上报）
 
 const view = document.getElementById('view');
 const brand = document.getElementById('brand');
@@ -24,6 +26,7 @@ let identity = null;
 let mode = null; // null | 'pending' | 'bound' | 'disabled' | 'error'
 let heartbeatTimer = null;
 let refreshTimer = null;
+let eventsTimer = null;
 let idleWatch = null;
 
 // ───────── 主题（总后台按设备下发 black / white） ─────────
@@ -98,6 +101,18 @@ function startHeartbeat() {
   heartbeatTimer = setInterval(heartbeat, HEARTBEAT_MS);
 }
 
+// ───────── 埋点：每 10 秒批量上报一次本地队列；页面卸载时 keepalive 补发 ─────────
+
+function startEvents() {
+  if (eventsTimer) return;
+  eventsTimer = setInterval(() => {
+    if (mode === 'bound') void flushEvents();
+  }, EVENTS_MS);
+  window.addEventListener('pagehide', () => {
+    if (mode === 'bound') void flushEvents({ keepalive: true });
+  });
+}
+
 // ───────── 未绑定 / 停用 / 错误提示页 ─────────
 
 function renderMessage(lines) {
@@ -134,6 +149,8 @@ function showError(message) {
 function enterBound() {
   invalidateGarments();
   void flushSegments();
+  void flushEvents(); // 开机 / 重新绑定后补报上次留下的埋点
+  startEvents();
   router.reset(homeEntry);
   void refreshContent();
   startRefresh();

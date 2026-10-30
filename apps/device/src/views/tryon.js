@@ -2,6 +2,7 @@ import { errorMessage, mediaUrl, request } from '../api.js';
 import { button, h, toast } from '../dom.js';
 import { bindTap } from '../tap.js';
 import { createBilling } from '../segments.js';
+import { trackEvent } from '../events.js';
 import { getDeviceConfig } from '../config.js';
 import { createSnapshotFlow } from './snapshot.js';
 
@@ -114,7 +115,12 @@ export function tryonEntry(items, garmentId) {
   return {
     fullscreen: true,
     render(root, nav) {
-      const billing = createBilling();
+      // 埋点与计费同一时机：上屏开始计时报 tryon_start，结算一段报 tryon_end（同一时长）
+      const billing = createBilling({
+        onStart: ({ garmentId: id }) => trackEvent('tryon_start', { garmentId: id }),
+        onEnd: ({ garmentId: id, durationMs }, { keepalive }) =>
+          trackEvent('tryon_end', { garmentId: id, durationMs }, { keepalive }),
+      });
       let currentId = garmentId;
       let phase = 'connecting'; // connecting | running | switching | reconnecting | failed
       let session = null;

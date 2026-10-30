@@ -1,6 +1,7 @@
 import { errorMessage, request } from '../api.js';
 import { button, h, toast } from '../dom.js';
 import { bindTap } from '../tap.js';
+import { trackEvent } from '../events.js';
 
 /**
  * 试穿中“扫码领优惠”（RDM-01，接口见 docs/03-接口与集成/Phase5-接口约定.md §2）：
@@ -292,6 +293,7 @@ export function createSnapshotFlow({ remote, onScreenGarment }) {
       if (disposed) return;
       if (status !== 200 && status !== 201) throw new SnapError(reserveMessage(status, data));
       if (!data?.id || !data?.code) throw new SnapError('领取失败，请稍后再试');
+      trackEvent('snapshot_create', { snapshotId: data.id, garmentId: garment.id });
       const img = qrImage(data.qrSvg);
       if (!img) throw new SnapError('二维码生成失败，请稍后再试');
 
