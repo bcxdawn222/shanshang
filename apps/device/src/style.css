@@ -821,3 +821,206 @@ body.theme-black .player {
   font-size: var(--fs-body);
   color: var(--muted);
 }
+
+/* ───────── 玩法页（运势穿搭 / 星座轮盘 / AI智趣推荐） ───────── */
+.pick-grid {
+  display: grid;
+  gap: 2vw;
+  padding-bottom: 4vh;
+}
+
+.pick-grid.cols-2 {
+  grid-template-columns: repeat(2, 1fr);
+}
+
+.pick-grid.cols-3 {
+  grid-template-columns: repeat(3, 1fr);
+}
+
+.pick-grid.cols-4 {
+  grid-template-columns: repeat(4, 1fr);
+}
+
+.pick-grid.cols-7 {
+  grid-template-columns: repeat(7, 1fr);
+  gap: 1.2vw;
+}
+
+.pick {
+  min-height: clamp(110px, 10vh, 200px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 12px;
+}
+
+.cols-7 .pick {
+  min-height: clamp(80px, 7vh, 130px);
+  padding: 0;
+}
+
+.pick-icon {
+  font-size: clamp(36px, 5vw, 72px);
+  line-height: 1;
+}
+
+.pick-label {
+  font-size: var(--fs-big);
+  font-weight: 700;
+}
+
+.pick-sub {
+  font-size: clamp(14px, 1.7vw, 22px);
+  color: var(--muted);
+  font-weight: 400;
+}
+
+.stars {
+  color: #ffc53d;
+  letter-spacing: 0.12em;
+}
+
+.fun-section-title {
+  margin: 2vh 0 0;
+  text-align: center;
+  font-size: var(--fs-big);
+  font-weight: 700;
+}
+
+.page-body > .fun-more {
+  display: block;
+  margin: 0 auto 4vh;
+  min-width: 40vw;
+}
+
+/* 星座轮盘 */
+.wheel-stage {
+  display: flex;
+  justify-content: center;
+}
+
+.wheel-canvas {
+  width: min(82vw, 52vh);
+  aspect-ratio: 1 / 1;
+  touch-action: none;
+  cursor: grab;
+}
+
+.page-body > .wheel-spin {
+  display: block;
+  margin: 2vh auto 0;
+  min-width: 46vw;
+  min-height: 88px;
+  font-size: var(--fs-big);
+}
+
+.wheel-hint {
+  margin: 1.4vh 0 0;
+  text-align: center;
+  font-size: clamp(16px, 1.9vw, 24px);
+  color: var(--muted);
+}
+
+.wheel-result {
+  display: flex;
+  flex-direction: column;
+  gap: 2vh;
+  scroll-margin-top: 2vh;
+}
+
+.wheel-result:empty {
+  display: none;
+}
+
+.wheel-result-title {
+  margin: 3vh 0 0;
+  text-align: center;
+  font-size: clamp(36px, 5.4vw, 72px);
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  background: var(--accent);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.wheel-result-sub {
+  margin: 0;
+  text-align: center;
+  font-size: var(--fs-body);
+  color: var(--muted);
+}
+
+.wheel-result .page-msg {
+  margin: 4vh 0;
+}
+
+/* 运势卡 */
+.fortune-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2vh;
+  padding: 4vh 5vw;
+  border: 1px solid var(--card-stroke);
+  border-radius: var(--radius);
+  background: var(--card);
+  text-align: center;
+}
+
+.fortune-card p {
+  margin: 0;
+}
+
+.fortune-date {
+  font-size: clamp(16px, 1.9vw, 24px);
+  color: var(--muted);
+}
+
+.fortune-zodiac {
+  font-size: clamp(36px, 5.4vw, 72px);
+  font-weight: 800;
+  background: var(--accent);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.fortune-stars {
+  display: flex;
+  flex-direction: column;
+  gap: 1vh;
+  font-size: var(--fs-big);
+}
+
+.fortune-star-row {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+}
+
+.fortune-star-label {
+  font-weight: 700;
+}
+
+.fortune-text {
+  font-size: var(--fs-body);
+  line-height: 1.6;
+}
+
+.fortune-lucky {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  font-size: var(--fs-big);
+  font-weight: 700;
+}
+
+.fortune-swatch {
+  width: 1.2em;
+  height: 1.2em;
+  border-radius: 50%;
+  border: 2px solid var(--card-stroke);
+}
