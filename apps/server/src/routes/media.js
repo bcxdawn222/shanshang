@@ -6,8 +6,8 @@ const mediaParams = {
   type: 'object',
   required: ['dir', 'name'],
   properties: {
-    // recharge：充值收款码；ads：广告素材；dramas：短剧专题海报
-    dir: { type: 'string', enum: ['garments', 'recharge', 'ads', 'dramas'] },
+    // recharge：充值收款码；ads：广告素材；dramas：短剧专题海报；site：联系我们微信二维码、打赏码
+    dir: { type: 'string', enum: ['garments', 'recharge', 'ads', 'dramas', 'site'] },
     name: { type: 'string', pattern: '^[a-f0-9]{24}\\.(jpg|png|webp|mp4|webm)$' },
   },
 };

@@ -23,6 +23,9 @@ import merchantRedeemRoutes from './routes/merchantRedeem.js';
 import snapshotPageRoutes from './routes/snapshotPage.js';
 import adminFunRoutes from './routes/adminFun.js';
 import deviceFunRoutes from './routes/deviceFun.js';
+import adminStatsRoutes from './routes/adminStats.js';
+import deviceEventRoutes from './routes/deviceEvents.js';
+import merchantStatsRoutes from './routes/merchantStats.js';
 
 // 服饰图单张上限
 export const MAX_IMAGE_BYTES = 10 * 1024 * 1024;
@@ -108,6 +111,9 @@ export async function buildApp({
     adminSnapshotRoutes,
     adminFunRoutes,
     deviceFunRoutes,
+    deviceEventRoutes,
+    merchantStatsRoutes,
+    adminStatsRoutes,
   ]) {
     await app.register(routes, { prefix: '/api', ctx });
   }

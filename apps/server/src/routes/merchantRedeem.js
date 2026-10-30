@@ -2,6 +2,7 @@ import { writeAudit } from '../lib/audit.js';
 import { requireAccount } from '../lib/guards.js';
 import { HttpError } from '../lib/http.js';
 import { VALID_SQL, imagePath, publicState } from '../lib/snapshots.js';
+import { recordRedeem } from '../lib/stats.js';
 
 // { code } 或 { token } 二选一
 const targetBody = {
@@ -98,6 +99,8 @@ export default async function merchantRedeemRoutes(app, { ctx }) {
         ip: request.ip,
         now: t,
       });
+      // Phase 7：核销件数计入 stat_daily（核销当天 × 服饰所属商家 × 快照来源设备）
+      recordRedeem(db, { merchantId: row.merchant_id, garmentId: row.garment_id, deviceId: row.device_id, now: t });
       return true;
     })();
     const fresh = byId.get(row.id);
