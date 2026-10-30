@@ -15,6 +15,7 @@
   },
   "dependencies": {
     "@fastify/cookie": "11.1.5",
+    "@fastify/multipart": "10.1.6",
     "better-sqlite3": "12.11.1",
     "fastify": "5.12.7"
   }

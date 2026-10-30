@@ -1,12 +1,14 @@
+import { loadDicts, promoteDue } from '../lib/garments.js';
 import { HttpError, isUniqueViolation } from '../lib/http.js';
 import { randomCode, randomToken, sha256 } from '../lib/tokens.js';
+import { issueTemporaryKey } from '../lib/xmax.js';
 
 /**
  * 设备接口。设备开机先 register 拿到 code（屏幕显示）和设备令牌（本地保存）；
- * 管理员按 code 绑定后，设备凭令牌换 Xmax 临时密钥。未绑定、已停用设备一律拒绝（DVC-02）。
+ * 管理员按 code 绑定后，设备凭令牌换 Xmax 临时密钥、拉服饰清单。未绑定、已停用设备一律拒绝（DVC-02）。
  */
 export default async function deviceRoutes(app, { ctx }) {
-  const { db, config, now, fetchImpl, limiters } = ctx;
+  const { db, config, now, limiters } = ctx;
 
   app.post('/device/register', async (request, reply) => {
     if (!limiters.deviceRegister.hit(request.ip)) {
@@ -37,6 +39,10 @@ export default async function deviceRoutes(app, { ctx }) {
     request.device = device;
   }
 
+  function requireBound(request) {
+    if (request.device.status !== 'bound') throw new HttpError(403, 'DEVICE_NOT_BOUND', '设备未绑定或已停用');
+  }
+
   // 设备轮询：未绑定时屏幕继续显示设备码
   app.get('/device/status', { preValidation: deviceAuth }, async (request) => {
     const { code, status, name, location } = request.device;
@@ -44,46 +50,57 @@ export default async function deviceRoutes(app, { ctx }) {
   });
 
   app.post('/device/xmax-key', { preValidation: deviceAuth }, async (request) => {
+    requireBound(request);
     const device = request.device;
-    if (device.status !== 'bound') throw new HttpError(403, 'DEVICE_NOT_BOUND', '设备未绑定或已停用');
-    const { apiKey, apiBase, keyExpireSeconds, keyPointsLimit } = config.xmax;
-    if (!apiKey || !apiBase) throw new HttpError(503, 'XMAX_NOT_CONFIGURED', '服务端未配置 Xmax 密钥');
+    if (!config.xmax.apiKey || !config.xmax.apiBase) {
+      throw new HttpError(503, 'XMAX_NOT_CONFIGURED', '服务端未配置 Xmax 密钥');
+    }
     if (!limiters.xmaxKey.hit(String(device.id))) {
       throw new HttpError(429, 'TOO_MANY_REQUESTS', '获取试穿密钥过于频繁，请稍后再试');
     }
-
-    let upstream;
-    let text;
     try {
-      upstream = await fetchImpl(`${apiBase}/temporary-api-key`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'X-Api-Key': apiKey },
-        body: JSON.stringify({ expireSeconds: keyExpireSeconds, pointsLimit: keyPointsLimit }),
-        signal: AbortSignal.timeout(10_000),
-      });
-      text = await upstream.text();
+      const key = await issueTemporaryKey(ctx);
+      request.log.info({ deviceId: device.id }, 'xmax temporary key issued');
+      return key;
     } catch (error) {
-      request.log.error({ err: error, deviceId: device.id }, 'xmax key request failed');
-      throw new HttpError(502, 'XMAX_UPSTREAM_ERROR', '试穿服务暂时不可用');
+      request.log.error({ code: error.code, deviceId: device.id }, 'xmax key request failed');
+      throw error;
     }
+  });
 
-    let payload = null;
-    try {
-      payload = JSON.parse(text);
-    } catch {
-      // 非 JSON 响应按失败处理
-    }
-    const data = payload?.data ?? payload;
-    if (!upstream.ok || !data?.temporaryApiKey) {
-      request.log.error({ status: upstream.status, deviceId: device.id }, 'xmax key bad response');
-      throw new HttpError(502, 'XMAX_UPSTREAM_ERROR', '试穿服务暂时不可用');
-    }
-
-    request.log.info({ deviceId: device.id }, 'xmax temporary key issued');
+  // 设备服饰清单：已上架、审核期已到、商家正常的服饰。xmaxUrl 为空时设备用官方 SDK 兜底上传 imagePath
+  app.get('/device/garments', { preValidation: deviceAuth }, async (request) => {
+    requireBound(request);
+    const t = now();
+    promoteDue(db, t);
+    const dicts = loadDicts(db);
+    const name = (id) => dicts.get(id)?.name ?? '';
+    const rows = db
+      .prepare(
+        `SELECT g.*, m.brand_name, m.shop_location AS merchant_location
+           FROM garment g
+           JOIN account a ON a.id = g.merchant_id
+           JOIN merchant m ON m.account_id = g.merchant_id
+          WHERE g.deleted_at IS NULL AND g.status = 'ready' AND g.available_at <= ? AND a.status = 'approved'
+          ORDER BY g.merchant_id, g.id`,
+      )
+      .all(t);
     return {
-      temporaryApiKey: data.temporaryApiKey,
-      expireTimestamp: data.expireTimestamp ?? null,
-      pointsLimit: data.pointsLimit ?? keyPointsLimit,
+      items: rows.map((g) => ({
+        id: g.id,
+        merchantId: g.merchant_id,
+        brandName: g.brand_name,
+        title: g.title,
+        gender: g.gender,
+        setType: g.set_type,
+        category: name(g.category_id),
+        color: name(g.color_id),
+        scenes: JSON.parse(g.scene_ids).map(name).filter(Boolean),
+        discountText: g.discount_text,
+        shopLocation: g.shop_location || g.merchant_location,
+        imagePath: `media/${g.image_key}`,
+        xmaxUrl: g.xmax_url,
+      })),
     };
   });
 }
