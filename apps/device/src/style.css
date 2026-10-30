@@ -1,43 +1,115 @@
+/* 闪裳Live 设备前台：55 寸竖屏广告机。按钮最小 64px，字号按视口宽度缩放 */
+:root {
+  --touch: 64px;
+  --radius: 22px;
+  --accent: linear-gradient(90deg, #ff4fd8, #6c8cff);
+  --danger: linear-gradient(135deg, #ff5f8f, #ff8a5f);
+  --fs-body: clamp(20px, 2.6vw, 34px);
+  --fs-big: clamp(26px, 3.6vw, 48px);
+  font-family: -apple-system, 'PingFang SC', 'Microsoft YaHei', sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
 html,
 body {
   height: 100%;
   margin: 0;
+  overflow: hidden;
 }
 
 body {
-  font-family: -apple-system, 'PingFang SC', 'Microsoft YaHei', sans-serif;
-  background: radial-gradient(circle at 30% 20%, #2a1f4f, #0b0b16 70%);
-  color: #f2f3f7;
   touch-action: manipulation;
   user-select: none;
+  -webkit-user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* ───────── 主题：总后台按设备下发 black / white ───────── */
+body.theme-black {
+  --bg: #0b0b16;
+  --fg: #f2f3f7;
+  --muted: #a3a7b8;
+  --card: rgba(255, 255, 255, 0.07);
+  --card-stroke: rgba(255, 255, 255, 0.14);
+  background: radial-gradient(circle at 30% 20%, #2a1f4f, #0b0b16 70%) fixed;
+  color: var(--fg);
+  color-scheme: dark;
+}
+
+body.theme-white {
+  --bg: #f6f7fb;
+  --fg: #16182a;
+  --muted: #5d6275;
+  --card: #ffffff;
+  --card-stroke: rgba(22, 24, 42, 0.12);
+  background: radial-gradient(circle at 30% 20%, #ffe9fa, #f6f7fb 70%) fixed;
+  color: var(--fg);
+  color-scheme: light;
 }
 
 #app {
   height: 100%;
   display: flex;
   flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 48px;
-  text-align: center;
-  padding: 0 6vw;
-  box-sizing: border-box;
+  align-items: stretch;
+  padding: 4vh 5vw 3vh;
+  gap: 3vh;
 }
 
 .brand {
   margin: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4em;
   font-size: clamp(40px, 6vw, 88px);
   letter-spacing: 0.08em;
-  background: linear-gradient(90deg, #ff4fd8, #6c8cff);
+  text-align: center;
+}
+
+.brand span {
+  background: var(--accent);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
 }
 
-.view p {
+.brand-logo {
+  height: 1.2em;
+  width: auto;
+  object-fit: contain;
+}
+
+.view {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  scrollbar-width: none;
+}
+
+.view::-webkit-scrollbar {
+  display: none;
+}
+
+/* ───────── 未绑定 / 停用 / 错误提示 ───────── */
+.notice {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+.notice p {
   margin: 12px 0;
-  font-size: clamp(18px, 2.4vw, 32px);
-  color: #c9cbd6;
+  font-size: var(--fs-body);
+  color: var(--muted);
 }
 
 .code {
@@ -46,14 +118,431 @@ body {
   font-size: clamp(56px, 9vw, 140px);
   font-weight: 700;
   letter-spacing: 0.18em;
-  color: #fff;
+  color: var(--fg);
 }
 
 .hint {
-  font-size: clamp(14px, 1.8vw, 22px) !important;
-  color: #8a8fa3 !important;
+  font-size: clamp(16px, 1.9vw, 24px) !important;
 }
 
 .error {
-  color: #ff8a8a !important;
+  color: #ff6b6b !important;
+}
+
+/* ───────── 按钮 ───────── */
+.btn {
+  min-height: var(--touch);
+  min-width: var(--touch);
+  padding: 0 28px;
+  border: 1px solid var(--card-stroke);
+  border-radius: var(--radius);
+  background: var(--card);
+  color: var(--fg);
+  font: inherit;
+  font-size: var(--fs-body);
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.1s ease, opacity 0.2s ease;
+}
+
+.btn:active {
+  transform: scale(0.97);
+}
+
+.btn[disabled] {
+  opacity: 0.45;
+}
+
+.btn-primary {
+  border: 0;
+  color: #fff;
+  background: var(--accent);
+}
+
+.btn-danger {
+  border: 0;
+  color: #fff;
+  background: var(--danger);
+}
+
+.btn-ghost {
+  background: transparent;
+}
+
+/* ───────── 首页 ───────── */
+.home-tip {
+  margin: 0 0 3vh;
+  text-align: center;
+  font-size: var(--fs-body);
+  color: var(--muted);
+}
+
+.home-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 2.4vw;
+}
+
+.home-tile {
+  position: relative;
+  min-height: clamp(140px, 13vh, 260px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 20px;
+}
+
+.home-icon {
+  font-size: clamp(40px, 6vw, 84px);
+  line-height: 1;
+}
+
+.home-label {
+  font-size: var(--fs-big);
+  font-weight: 700;
+  letter-spacing: 0.06em;
+}
+
+.home-tile.is-soon {
+  opacity: 0.6;
+}
+
+.home-soon {
+  position: absolute;
+  top: 14px;
+  right: 16px;
+  padding: 4px 14px;
+  border-radius: 999px;
+  font-size: clamp(14px, 1.6vw, 22px);
+  background: rgba(127, 127, 127, 0.25);
+}
+
+/* ───────── 二级页 ───────── */
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: 3vh;
+  min-height: 100%;
+}
+
+.page-head {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 16px;
+}
+
+.page-title {
+  text-align: center;
+  min-width: 0;
+}
+
+.page-title h2 {
+  margin: 0;
+  font-size: var(--fs-big);
+}
+
+.page-title p {
+  margin: 6px 0 0;
+  font-size: clamp(16px, 1.9vw, 24px);
+  color: var(--muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.page-msg {
+  margin: 10vh 0 4vh;
+  text-align: center;
+  font-size: var(--fs-body);
+  color: var(--muted);
+}
+
+.page-body > .btn {
+  display: block;
+  margin: 0 auto;
+}
+
+.options {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 2.4vw;
+}
+
+.option {
+  min-height: clamp(120px, 11vh, 220px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.opt-label {
+  font-size: var(--fs-big);
+  font-weight: 700;
+}
+
+.opt-sub {
+  font-size: clamp(16px, 1.9vw, 24px);
+  color: var(--muted);
+  font-weight: 400;
+}
+
+.garment-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 2vw;
+  padding-bottom: 4vh;
+}
+
+.garment-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  padding: 0;
+  overflow: hidden;
+}
+
+.garment-img {
+  width: 100%;
+  aspect-ratio: 3 / 4;
+  object-fit: cover;
+  background: rgba(127, 127, 127, 0.15);
+  pointer-events: none;
+}
+
+.garment-title {
+  padding: 12px 10px 14px;
+  font-size: clamp(18px, 2.2vw, 30px);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.garment-discount {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  padding: 4px 12px;
+  border-radius: 999px;
+  font-size: clamp(14px, 1.6vw, 22px);
+  color: #fff;
+  background: var(--danger);
+}
+
+/* ───────── 试穿（全屏） ───────── */
+body.mode-tryon #app {
+  padding: 0;
+  gap: 0;
+}
+
+body.mode-tryon .brand {
+  display: none;
+}
+
+body.mode-tryon .view {
+  overflow: hidden;
+}
+
+.tryon {
+  position: fixed;
+  inset: 0;
+  background: #000;
+  color: #fff;
+}
+
+.tryon-remote {
+  position: absolute;
+  inset: 0;
+}
+
+.tryon-remote video,
+.tryon-local video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.tryon-local {
+  position: absolute;
+  left: 24px;
+  top: 24px;
+  width: clamp(120px, 16vw, 220px);
+  aspect-ratio: 3 / 4;
+  border-radius: 18px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  background: #0a0f1b;
+}
+
+.tryon-local:empty {
+  display: none;
+}
+
+.tryon-status {
+  position: absolute;
+  inset: 0;
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4vh;
+  padding: 0 8vw;
+  text-align: center;
+  background: rgba(0, 0, 0, 0.6);
+}
+
+.tryon-status[hidden] {
+  display: none;
+}
+
+.tryon-status-text {
+  margin: 0;
+  font-size: var(--fs-big);
+}
+
+.tryon-status-actions {
+  display: flex;
+  gap: 24px;
+}
+
+.tryon-status-actions .btn {
+  color: #fff;
+}
+
+/* 角标放右上：右下角是外壳悬浮球 */
+.tryon-badge {
+  position: absolute;
+  right: 24px;
+  top: 24px;
+  z-index: 30;
+  width: clamp(180px, 22vw, 300px);
+  padding: 18px;
+  border-radius: 20px;
+  background: rgba(10, 12, 24, 0.72);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  backdrop-filter: blur(10px);
+  text-align: center;
+}
+
+.tryon-badge p {
+  margin: 0 0 8px;
+}
+
+.badge-title {
+  font-size: clamp(14px, 1.6vw, 22px);
+  color: #b9bfd3;
+}
+
+.badge-location {
+  font-size: clamp(20px, 2.4vw, 32px);
+  font-weight: 700;
+  word-break: break-all;
+}
+
+.badge-discount {
+  font-size: clamp(16px, 1.9vw, 24px);
+  color: #ffb3c6;
+}
+
+.badge-qr {
+  margin-top: 10px;
+  aspect-ratio: 1;
+  display: grid;
+  place-items: center;
+  border-radius: 14px;
+  border: 2px dashed rgba(255, 255, 255, 0.35);
+  font-size: clamp(16px, 1.9vw, 24px);
+  color: #dfe3f0;
+}
+
+.tryon-end {
+  position: absolute;
+  left: 24px;
+  bottom: calc(clamp(150px, 15vh, 240px) + 28px);
+  z-index: 30;
+  padding: 0 40px;
+}
+
+/* 底部服饰条：右侧留出悬浮球空间 */
+.tryon-bar {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 25;
+  padding: 16px 140px 20px 24px;
+  background: linear-gradient(0deg, rgba(0, 0, 0, 0.85), transparent);
+}
+
+.tryon-rail {
+  display: flex;
+  gap: 16px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: none;
+}
+
+.tryon-rail::-webkit-scrollbar {
+  display: none;
+}
+
+.tryon-thumb {
+  flex: none;
+  width: clamp(110px, 11vw, 170px);
+  height: clamp(150px, 15vh, 240px);
+  display: flex;
+  flex-direction: column;
+  border-radius: 16px;
+  overflow: hidden;
+  border: 3px solid rgba(255, 255, 255, 0.15);
+  background: #111;
+  cursor: pointer;
+}
+
+.tryon-thumb.active {
+  border-color: #ff4fd8;
+}
+
+.tryon-thumb img {
+  flex: 1;
+  min-height: 0;
+  width: 100%;
+  object-fit: cover;
+  pointer-events: none;
+}
+
+.tryon-thumb span {
+  padding: 6px 8px;
+  font-size: clamp(14px, 1.5vw, 20px);
+  text-align: center;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ───────── 提示条 ───────── */
+.toast {
+  position: fixed;
+  left: 50%;
+  top: 12vh;
+  z-index: 100;
+  transform: translateX(-50%);
+  max-width: 80vw;
+  padding: 20px 36px;
+  border-radius: 20px;
+  font-size: var(--fs-body);
+  color: #fff;
+  background: rgba(20, 20, 32, 0.9);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.4);
+  pointer-events: none;
+}
+
+.toast[hidden] {
+  display: none;
 }
