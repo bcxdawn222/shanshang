@@ -17,6 +17,10 @@ import mediaRoutes from './routes/media.js';
 import merchantRoutes from './routes/merchant.js';
 import merchantGarmentRoutes from './routes/merchantGarments.js';
 import publicRoutes from './routes/public.js';
+import adminSnapshotRoutes from './routes/adminSnapshots.js';
+import deviceSnapshotRoutes from './routes/deviceSnapshots.js';
+import merchantRedeemRoutes from './routes/merchantRedeem.js';
+import snapshotPageRoutes from './routes/snapshotPage.js';
 
 // 服饰图单张上限
 export const MAX_IMAGE_BYTES = 10 * 1024 * 1024;
@@ -60,6 +64,9 @@ export async function buildApp({
       register: new WindowLimiter({ limit: 10, windowMs: 60 * 60_000, now }),
       deviceRegister: new WindowLimiter({ limit: 10, windowMs: 60 * 60_000, now }),
       xmaxKey: new WindowLimiter({ limit: 30, windowMs: 60 * 60_000, now }),
+      // Phase 5：快照预约每台设备每分钟 10 次；短码查询 / 核销每个商家每分钟 20 次（共用）
+      snapshotReserve: new WindowLimiter({ limit: 10, windowMs: 60_000, now }),
+      redeemLookup: new WindowLimiter({ limit: 20, windowMs: 60_000, now }),
     },
   };
 
@@ -94,8 +101,13 @@ export async function buildApp({
     adminPointsRoutes,
     adminAdsRoutes,
     deviceRoutes,
+    deviceSnapshotRoutes,
+    merchantRedeemRoutes,
+    adminSnapshotRoutes,
   ]) {
     await app.register(routes, { prefix: '/api', ctx });
   }
+  // 快照公开页不在 /api 下（nginx 把 /sl/s/ 代理到 /s/）
+  await app.register(snapshotPageRoutes, { ctx });
   return app;
 }
