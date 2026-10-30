@@ -28,14 +28,17 @@ export function clearIdentity() {
 
 /**
  * 统一请求。默认带当前设备令牌；有 body 时才发 JSON（Fastify 对空 JSON body 会报 400）。
+ * form：传 FormData 时按 multipart 发送（Content-Type 由浏览器带 boundary 自动生成）。
  * 返回 { status, data }，网络异常时抛 TypeError，由调用方决定怎么提示。
  */
-export async function request(path, { method = 'GET', body, token, keepalive = false } = {}) {
+export async function request(path, { method = 'GET', body, form, token, keepalive = false } = {}) {
   const headers = {};
   const auth = token === undefined ? currentToken : token;
   if (auth) headers.Authorization = `Bearer ${auth}`;
   const init = { method, headers, keepalive };
-  if (body !== undefined) {
+  if (form !== undefined) {
+    init.body = form;
+  } else if (body !== undefined) {
     headers['Content-Type'] = 'application/json';
     init.body = JSON.stringify(body);
   }

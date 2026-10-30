@@ -3,6 +3,7 @@ import { button, h, toast } from '../dom.js';
 import { bindTap } from '../tap.js';
 import { createBilling } from '../segments.js';
 import { getDeviceConfig } from '../config.js';
+import { createSnapshotFlow } from './snapshot.js';
 
 /**
  * 实时试穿页（复用 xmax-tryon 已验证链路）：
@@ -131,13 +132,18 @@ export function tryonEntry(items, garmentId) {
       const status = h('div', { class: 'tryon-status' }, statusText, statusActions);
       const badgeLocation = h('p', { class: 'badge-location' });
       const badgeDiscount = h('p', { class: 'badge-discount' });
+      // 扫码领优惠：只有当前服饰真正上屏（running 且已开始计费）才可点
+      const snap = createSnapshotFlow({
+        remote,
+        onScreenGarment: () => (phase === 'running' && billing.activeGarmentId === currentId ? current() : null),
+      });
       const badge = h(
         'aside',
         { class: 'tryon-badge' },
         h('p', { class: 'badge-title' }, '店铺位置'),
         badgeLocation,
         badgeDiscount,
-        h('div', { class: 'badge-qr', 'aria-label': '扫码领优惠（即将开放）' }, h('span', {}, '扫码领优惠')),
+        snap.button,
       );
       const rail = h('div', { class: 'tryon-rail', role: 'list' });
       const endBtn = button('结束试穿', () => nav.back(), 'btn btn-danger tryon-end');
@@ -192,17 +198,19 @@ export function tryonEntry(items, garmentId) {
       bindTap(limit, continueTryon);
 
       root.append(
-        h('div', { class: 'tryon' }, remote, local, status, badge, endBtn, h('footer', { class: 'tryon-bar' }, rail), limit),
+        h('div', { class: 'tryon' }, remote, local, status, badge, endBtn, h('footer', { class: 'tryon-bar' }, rail), ...snap.layers, limit),
       );
 
       function setStatus(text, actions = []) {
         statusText.textContent = text;
         statusActions.replaceChildren(...actions);
         status.hidden = false;
+        snap.sync();
       }
 
       function hideStatus() {
         status.hidden = true;
+        snap.sync();
       }
 
       function updateBadge() {
@@ -240,6 +248,7 @@ export function tryonEntry(items, garmentId) {
         client = null;
         resetStage();
         reportBusy(false);
+        snap.sync();
       }
 
       function retryOrFail(error) {
@@ -333,6 +342,7 @@ export function tryonEntry(items, garmentId) {
         const s = session;
         phase = 'switching';
         currentId = id;
+        snap.sync();
         renderRail();
         try {
           const refImageUrl = await ensureRefUrl(client, target);
@@ -342,11 +352,13 @@ export function tryonEntry(items, garmentId) {
           billing.open(id); // 结算上一件，开始计这一件
           phase = 'running';
           updateBadge();
+          snap.sync();
         } catch (error) {
           console.error('[tryon] 换装失败', error);
           if (disposed || session !== s) return;
           currentId = previousId;
           phase = 'running';
+          snap.sync();
           renderRail();
           toast('换装失败，已保留上一件');
         }
@@ -363,6 +375,7 @@ export function tryonEntry(items, garmentId) {
       function teardown({ keepalive = false } = {}) {
         if (disposed) return;
         disposed = true;
+        snap.dispose(); // 关闭确认层 / 二维码层并清掉倒计时
         clearTimeout(retryTimer);
         clearTimeout(limitTimer);
         clearInterval(countdownTimer);
