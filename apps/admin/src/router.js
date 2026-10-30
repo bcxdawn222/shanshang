@@ -21,6 +21,7 @@ const routes = [
       { path: 'playlists', component: () => import('./views/admin/Playlists.vue'), meta: { title: '播放列表' } },
       { path: 'hot', component: () => import('./views/admin/Hot.vue'), meta: { title: '热门榜' } },
       { path: 'dramas', component: () => import('./views/admin/Dramas.vue'), meta: { title: '短剧专题' } },
+      { path: 'fun', component: () => import('./views/admin/Fun.vue'), meta: { title: '玩法配置' } },
       { path: 'points', component: () => import('./views/admin/Points.vue'), meta: { title: '积分管理' } },
       { path: 'snapshots', component: () => import('./views/admin/Snapshots.vue'), meta: { title: '快照核销' } },
       { path: 'settings', component: () => import('./views/admin/Settings.vue'), meta: { title: '平台设置' } },

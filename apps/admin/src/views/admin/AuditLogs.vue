@@ -59,6 +59,8 @@ const ACTION_TEXT = {
   'drama.update': '修改短剧专题',
   'drama.delete': '删除短剧专题',
   'snapshot.redeem': '核销快照',
+  'fun.zodiac': '修改星座轮盘映射',
+  'fun.recommend': '修改 AI 推荐选项',
 };
 
 const items = ref([]);
