@@ -6,7 +6,8 @@ const mediaParams = {
   type: 'object',
   required: ['dir', 'name'],
   properties: {
-    dir: { type: 'string', enum: ['garments'] },
+    // recharge：充值收款码（总后台上传，商家后台展示）
+    dir: { type: 'string', enum: ['garments', 'recharge'] },
     name: { type: 'string', pattern: '^[a-f0-9]{24}\\.(jpg|png|webp)$' },
   },
 };

@@ -9,6 +9,7 @@ import { SESSION_COOKIE, loadSession } from './lib/session.js';
 import { createLocalStorage } from './lib/storage.js';
 import adminRoutes from './routes/admin.js';
 import adminGarmentRoutes from './routes/adminGarments.js';
+import adminPointsRoutes from './routes/adminPoints.js';
 import authRoutes from './routes/auth.js';
 import deviceRoutes from './routes/device.js';
 import mediaRoutes from './routes/media.js';
@@ -77,6 +78,7 @@ export async function buildApp({ config, db, storage, fetchImpl = globalThis.fet
     merchantGarmentRoutes,
     adminRoutes,
     adminGarmentRoutes,
+    adminPointsRoutes,
     deviceRoutes,
   ]) {
     await app.register(routes, { prefix: '/api', ctx });

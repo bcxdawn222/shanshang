@@ -1,5 +1,6 @@
 import { getAccountView } from '../lib/accounts.js';
 import { requireAccount } from '../lib/guards.js';
+import { getPointsConfig, merchantPoints, queryLedger } from '../lib/points.js';
 
 const profileBody = {
   type: 'object',
@@ -38,4 +39,36 @@ export default async function merchantRoutes(app, { ctx }) {
       return { account: getAccountView(db, id) };
     },
   );
+
+  // ---------- 积分（PT-01~06）：只看自己的，不返回 xmaxRatio、Xmax 积分 ----------
+  const approved = { preValidation: requireAccount('merchant', { approved: true }) };
+
+  app.get('/merchant/points', approved, async (request) => merchantPoints(db, request.account.id));
+
+  app.get(
+    '/merchant/points/ledger',
+    {
+      ...approved,
+      schema: {
+        querystring: {
+          type: 'object',
+          additionalProperties: false,
+          properties: {
+            page: { type: 'integer', minimum: 1, default: 1 },
+            pageSize: { type: 'integer', minimum: 1, maximum: 100, default: 20 },
+          },
+        },
+      },
+    },
+    async (request) => {
+      const { page, pageSize } = request.query;
+      return queryLedger(db, { merchantId: request.account.id, page, pageSize });
+    },
+  );
+
+  // 充值方式：联系方式 + 收款码，线下付款后由管理员手动加积分
+  app.get('/merchant/recharge', approved, async () => {
+    const { rechargeContact, rechargeQrUrl } = getPointsConfig(db);
+    return { contact: rechargeContact, qrUrl: rechargeQrUrl };
+  });
 }

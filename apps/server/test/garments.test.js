@@ -36,6 +36,14 @@ async function setup(opts) {
   const admin = await loginAdmin(h.app);
   const m = await registerMerchant(h.app);
   await approve(h.app, admin, m.id);
+  // Phase 3 起余额低于隐藏阈值（默认 5）的商家服饰不进设备清单，这里先充值，让本文件专注服饰流程
+  const topUp = await h.app.inject({
+    method: 'POST',
+    url: `/api/admin/merchants/${m.id}/points`,
+    headers: { cookie: admin },
+    payload: { type: 'add', amount: 100, note: '测试充值' },
+  });
+  if (topUp.statusCode !== 200) throw new Error(`top up failed: ${topUp.body}`);
   const d = await dicts(h.app);
   const upload = (overrides = {}, file = { data: JPEG }, cookie = m.cookie) => {
     const body = multipart(

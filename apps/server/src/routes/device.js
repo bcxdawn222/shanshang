@@ -1,7 +1,36 @@
 import { loadDicts, promoteDue } from '../lib/garments.js';
 import { HttpError, isUniqueViolation } from '../lib/http.js';
+import { consumeSegments, getPointsConfig, toMilli } from '../lib/points.js';
+import { getSettings } from '../lib/settings.js';
 import { randomCode, randomToken, sha256 } from '../lib/tokens.js';
 import { issueTemporaryKey } from '../lib/xmax.js';
+
+// 单段离屏时长上限 10 分钟；超出直接 400，不截断
+const MAX_SEGMENT_MS = 600_000;
+
+const segmentsBody = {
+  type: 'object',
+  required: ['sessionId', 'segments'],
+  additionalProperties: false,
+  properties: {
+    sessionId: { type: 'string', pattern: '^[A-Za-z0-9_-]{8,64}$' },
+    segments: {
+      type: 'array',
+      minItems: 1,
+      maxItems: 50,
+      items: {
+        type: 'object',
+        required: ['seq', 'garmentId', 'durationMs'],
+        additionalProperties: false,
+        properties: {
+          seq: { type: 'integer', minimum: 0 },
+          garmentId: { type: 'integer', minimum: 1 },
+          durationMs: { type: 'integer', minimum: 0, maximum: MAX_SEGMENT_MS },
+        },
+      },
+    },
+  },
+};
 
 /**
  * 设备接口。设备开机先 register 拿到 code（屏幕显示）和设备令牌（本地保存）；
@@ -45,9 +74,39 @@ export default async function deviceRoutes(app, { ctx }) {
 
   // 设备轮询：未绑定时屏幕继续显示设备码
   app.get('/device/status', { preValidation: deviceAuth }, async (request) => {
-    const { code, status, name, location } = request.device;
-    return { code, status, name, location };
+    const { code, status, name, location, background } = request.device;
+    return { code, status, name, location, background };
   });
+
+  // 心跳：每 30 秒一次。未绑定也可调，只更新 last_seen（deviceAuth 里已更新）
+  app.post('/device/heartbeat', { preValidation: deviceAuth }, async (request) => ({
+    ok: true,
+    background: request.device.background,
+    serverTime: now(),
+  }));
+
+  // 设备前台配置：平台名、Logo、背景、单次试穿上限
+  app.get('/device/config', { preValidation: deviceAuth }, async (request) => {
+    requireBound(request);
+    const { platformName, logoUrl } = getSettings(db);
+    const { tryonMaxMinutes } = getPointsConfig(db);
+    return { platformName, logoUrl, background: request.device.background, tryonMaxMinutes };
+  });
+
+  // 离屏时长上报：按 device_id + session_id + seq 幂等扣费到服饰所属商家，允许透支
+  app.post(
+    '/device/tryon/segments',
+    { preValidation: deviceAuth, schema: { body: segmentsBody } },
+    async (request) => {
+      requireBound(request);
+      return consumeSegments(db, {
+        deviceId: request.device.id,
+        sessionId: request.body.sessionId,
+        segments: request.body.segments,
+        now: now(),
+      });
+    },
+  );
 
   app.post('/device/xmax-key', { preValidation: deviceAuth }, async (request) => {
     requireBound(request);
@@ -68,7 +127,7 @@ export default async function deviceRoutes(app, { ctx }) {
     }
   });
 
-  // 设备服饰清单：已上架、审核期已到、商家正常的服饰。xmaxUrl 为空时设备用官方 SDK 兜底上传 imagePath
+  // 设备服饰清单：已上架、审核期已到、商家正常且余额不低于隐藏阈值的服饰。xmaxUrl 为空时设备用官方 SDK 兜底上传 imagePath
   app.get('/device/garments', { preValidation: deviceAuth }, async (request) => {
     requireBound(request);
     const t = now();
@@ -82,9 +141,10 @@ export default async function deviceRoutes(app, { ctx }) {
            JOIN account a ON a.id = g.merchant_id
            JOIN merchant m ON m.account_id = g.merchant_id
           WHERE g.deleted_at IS NULL AND g.status = 'ready' AND g.available_at <= ? AND a.status = 'approved'
+            AND m.balance_milli >= ?
           ORDER BY g.merchant_id, g.id`,
       )
-      .all(t);
+      .all(t, toMilli(getPointsConfig(db).hideThreshold));
     return {
       items: rows.map((g) => ({
         id: g.id,
