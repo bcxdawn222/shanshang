@@ -2,9 +2,13 @@
 // 线上 /sl/admin/ → /sl/api/，开发时 / → /api/
 const API_BASE = new URL('../api/', new URL(import.meta.env.BASE_URL, location.origin)).pathname;
 
-/** 服务端返回的媒体相对路径（media/garments/xxx.jpg）转成可访问地址 */
+/**
+ * 服务端返回的媒体相对路径（media/garments/xxx.jpg）转成可访问地址；
+ * 已是绝对路径或完整 URL 的（如快照图片 /sl/s/<token>/image）原样返回
+ */
 export function mediaUrl(path) {
-  return path ? API_BASE + path : '';
+  if (!path) return '';
+  return /^(https?:)?\/\//.test(path) || path.startsWith('/') ? path : API_BASE + path;
 }
 
 export class ApiError extends Error {
@@ -41,4 +45,37 @@ export async function api(path, { method = 'GET', body, query } = {}) {
     throw new ApiError(res.status, data?.error?.code ?? 'HTTP_ERROR', data?.error?.message ?? `请求失败（${res.status}）`);
   }
   return data;
+}
+
+/**
+ * 带进度的上传（fetch 拿不到上传进度，这里用 XMLHttpRequest）。
+ * onProgress(0~100)；signal 可中途取消。错误格式与 api() 一致。
+ */
+export function apiUpload(path, body, { method = 'POST', onProgress, signal } = {}) {
+  return new Promise((resolve, reject) => {
+    const xhr = new XMLHttpRequest();
+    xhr.open(method, API_BASE + path.replace(/^\//, ''));
+    xhr.withCredentials = true;
+    xhr.upload.onprogress = (e) => {
+      if (e.lengthComputable && onProgress) onProgress(Math.min(Math.round((e.loaded / e.total) * 100), 100));
+    };
+    xhr.onload = () => {
+      let data = null;
+      try {
+        data = JSON.parse(xhr.responseText);
+      } catch {
+        // 非 JSON（如 nginx 的 413 页面）
+      }
+      if (xhr.status >= 200 && xhr.status < 300) return resolve(data);
+      const fallback = xhr.status === 413 ? '文件过大，服务器拒绝接收' : `请求失败（${xhr.status}）`;
+      reject(new ApiError(xhr.status, data?.error?.code ?? 'HTTP_ERROR', data?.error?.message ?? fallback));
+    };
+    xhr.onerror = () => reject(new ApiError(0, 'NETWORK', '网络异常，请检查连接'));
+    xhr.onabort = () => reject(new ApiError(0, 'ABORTED', '已取消上传'));
+    if (signal) {
+      if (signal.aborted) return xhr.abort();
+      signal.addEventListener('abort', () => xhr.abort(), { once: true });
+    }
+    xhr.send(body);
+  });
 }

@@ -115,6 +115,10 @@
               <el-input-number v-model="cfg.tryonMaxMinutes" :min="1" :max="30" :step="1" :precision="0" />
               <span class="unit">分钟</span>
             </el-form-item>
+            <el-form-item label="待机进入播放" prop="idleMinutes">
+              <el-input-number v-model="cfg.idleMinutes" :min="1" :max="60" :step="1" :precision="0" />
+              <span class="unit">分钟无操作进入广告播放；试穿中会先结束试穿</span>
+            </el-form-item>
             <el-form-item label="Xmax 换算比例" prop="xmaxRatio">
               <el-input v-model.trim="cfg.xmaxRatio" maxlength="20" placeholder="平台积分 : Xmax 积分，如 1:10" style="width: 220px" />
               <span class="unit">仅总后台可见，商家不可见</span>
@@ -283,14 +287,15 @@ function viewLedger(row) {
 
 // ---- 配置 ----
 const cfgRef = ref();
-const config = ref({ pointsPerMinute: 1, hideThreshold: 5, xmaxRatio: '', rechargeContact: '', rechargeQrUrl: '', tryonMaxMinutes: 5 });
-const cfg = reactive({ pointsPerMinute: 1, hideThreshold: 5, xmaxRatio: '', rechargeContact: '', tryonMaxMinutes: 5 });
+const config = ref({ pointsPerMinute: 1, hideThreshold: 5, xmaxRatio: '', rechargeContact: '', rechargeQrUrl: '', tryonMaxMinutes: 5, idleMinutes: 4 });
+const cfg = reactive({ pointsPerMinute: 1, hideThreshold: 5, xmaxRatio: '', rechargeContact: '', tryonMaxMinutes: 5, idleMinutes: 4 });
 const cLoading = ref(false);
 const cSaving = ref(false);
 const cfgRules = {
   pointsPerMinute: [{ required: true, message: '请填写每分钟扣费', trigger: 'blur' }],
   hideThreshold: [{ required: true, message: '请填写隐藏阈值', trigger: 'blur' }],
   tryonMaxMinutes: [{ required: true, message: '请填写单次试穿上限', trigger: 'blur' }],
+  idleMinutes: [{ required: true, message: '请填写待机进入播放时间', trigger: 'blur' }],
 };
 
 function fillConfig(c) {
@@ -332,7 +337,7 @@ async function uploadQr(e) {
   if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) return ElMessage.warning('仅支持 JPG / PNG / WebP');
   if (file.size > 10 * 1024 * 1024) return ElMessage.warning('图片不能超过 10MB');
   const fd = new FormData();
-  fd.append('file', file);
+  fd.append('image', file);
   qrUploading.value = true;
   try {
     fillConfig(await api('admin/points/recharge-qr', { method: 'POST', body: fd }));

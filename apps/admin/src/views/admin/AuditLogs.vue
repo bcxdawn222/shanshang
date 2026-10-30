@@ -48,6 +48,17 @@ const ACTION_TEXT = {
   'points.deduct': '扣积分',
   'points.config': '修改积分配置',
   'account.password_change': '修改密码',
+  'ad.upload': '上传广告素材',
+  'ad.delete': '删除广告素材',
+  'playlist.update': '修改播放列表',
+  'hot.pin': '热门榜置顶',
+  'hot.unpin': '热门榜取消置顶',
+  'hot.remove': '移出热门榜',
+  'hot.restore': '恢复进热门榜',
+  'drama.create': '新建短剧专题',
+  'drama.update': '修改短剧专题',
+  'drama.delete': '删除短剧专题',
+  'snapshot.redeem': '核销快照',
 };
 
 const items = ref([]);

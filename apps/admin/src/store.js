@@ -63,6 +63,19 @@ export const LEDGER_TYPE_TAG = {
   REFUND: 'primary',
 };
 
+/** 快照状态（接口约定 Phase 5 §4）；作废（预约后未上传）也按 expired 返回 */
+export const SNAPSHOT_STATE_TEXT = {
+  valid: '可核销',
+  redeemed: '已核销',
+  expired: '已过期',
+};
+
+export const SNAPSHOT_STATE_TAG = {
+  valid: 'success',
+  redeemed: 'info',
+  expired: 'warning',
+};
+
 /** 毫秒时长 → 时:分:秒 */
 export function fmtDuration(ms) {
   const total = Math.max(Math.floor((ms || 0) / 1000), 0);

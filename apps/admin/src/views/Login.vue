@@ -18,13 +18,14 @@
 
 <script setup>
 import { computed, reactive, ref } from 'vue';
-import { useRouter } from 'vue-router';
+import { useRoute, useRouter } from 'vue-router';
 import { api } from '../api.js';
 import AuthFrame from '../components/AuthFrame.vue';
 import { store } from '../store.js';
 
 const props = defineProps({ role: { type: String, required: true } });
 const isAdmin = computed(() => props.role === 'admin');
+const route = useRoute();
 const router = useRouter();
 const form = reactive({ username: '', password: '' });
 const loading = ref(false);
@@ -40,7 +41,10 @@ async function submit() {
   try {
     const { account } = await api(`auth/${props.role}/login`, { method: 'POST', body: form });
     store.account = account;
-    router.replace(isAdmin.value ? '/admin' : '/merchant');
+    // 守卫带来的 redirect 只接受本角色的站内路径
+    const redirect = route.query.redirect;
+    const ok = typeof redirect === 'string' && redirect.startsWith(`/${props.role}/`);
+    router.replace(ok ? redirect : isAdmin.value ? '/admin' : '/merchant');
   } catch (e) {
     error.value = e.message;
   } finally {
