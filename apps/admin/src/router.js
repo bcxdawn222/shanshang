@@ -14,6 +14,8 @@ const routes = [
     children: [
       { path: '', redirect: '/admin/merchants' },
       { path: 'merchants', component: () => import('./views/admin/Merchants.vue'), meta: { title: '商家管理' } },
+      { path: 'garments', component: () => import('./views/admin/Garments.vue'), meta: { title: '服饰审核' } },
+      { path: 'dicts', component: () => import('./views/admin/Dicts.vue'), meta: { title: '标签字典' } },
       { path: 'devices', component: () => import('./views/admin/Devices.vue'), meta: { title: '设备管理' } },
       { path: 'settings', component: () => import('./views/admin/Settings.vue'), meta: { title: '平台设置' } },
       { path: 'audit-logs', component: () => import('./views/admin/AuditLogs.vue'), meta: { title: '操作日志' } },
@@ -27,6 +29,7 @@ const routes = [
     children: [
       { path: '', redirect: '/merchant/home' },
       { path: 'home', component: () => import('./views/merchant/Home.vue'), meta: { title: '账号概览' } },
+      { path: 'garments', component: () => import('./views/merchant/Garments.vue'), meta: { title: '我的服饰' } },
       { path: 'password', component: () => import('./views/Password.vue'), meta: { title: '修改密码' } },
     ],
   },

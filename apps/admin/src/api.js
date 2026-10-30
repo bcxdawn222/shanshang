@@ -2,6 +2,11 @@
 // 线上 /sl/admin/ → /sl/api/，开发时 / → /api/
 const API_BASE = new URL('../api/', new URL(import.meta.env.BASE_URL, location.origin)).pathname;
 
+/** 服务端返回的媒体相对路径（media/garments/xxx.jpg）转成可访问地址 */
+export function mediaUrl(path) {
+  return path ? API_BASE + path : '';
+}
+
 export class ApiError extends Error {
   constructor(status, code, message) {
     super(message);
@@ -18,7 +23,10 @@ export async function api(path, { method = 'GET', body, query } = {}) {
     if ([...qs].length) url += `?${qs}`;
   }
   const init = { method, credentials: 'same-origin', headers: {} };
-  if (body !== undefined) {
+  if (body instanceof FormData) {
+    // 文件上传：Content-Type 由浏览器带 boundary 自动生成
+    init.body = body;
+  } else if (body !== undefined) {
     init.headers['Content-Type'] = 'application/json';
     init.body = JSON.stringify(body);
   }
