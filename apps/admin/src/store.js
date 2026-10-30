@@ -76,6 +76,17 @@ export const SNAPSHOT_STATE_TAG = {
   expired: 'warning',
 };
 
+/** 留言反馈状态（SET-07） */
+export const FEEDBACK_STATUS_TEXT = {
+  pending: '待处理',
+  replied: '已回复',
+};
+
+export const FEEDBACK_STATUS_TAG = {
+  pending: 'warning',
+  replied: 'success',
+};
+
 /** 毫秒时长 → 时:分:秒 */
 export function fmtDuration(ms) {
   const total = Math.max(Math.floor((ms || 0) / 1000), 0);

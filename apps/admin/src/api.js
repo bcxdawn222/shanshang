@@ -48,6 +48,40 @@ export async function api(path, { method = 'GET', body, query } = {}) {
 }
 
 /**
+ * 下载文件（如导出 Excel）：带 Cookie，文件名取响应头 Content-Disposition（优先 filename*），
+ * 失败时按 { error: { code, message } } 抛 ApiError
+ */
+export async function apiDownload(path, { query, filename = 'download' } = {}) {
+  let url = API_BASE + path.replace(/^\//, '');
+  if (query) {
+    const qs = new URLSearchParams(Object.entries(query).filter(([, v]) => v !== undefined && v !== null && v !== ''));
+    if ([...qs].length) url += `?${qs}`;
+  }
+  let res;
+  try {
+    res = await fetch(url, { credentials: 'same-origin' });
+  } catch {
+    throw new ApiError(0, 'NETWORK', '网络异常，请检查连接');
+  }
+  if (!res.ok) {
+    const data = await res.json().catch(() => null);
+    throw new ApiError(res.status, data?.error?.code ?? 'HTTP_ERROR', data?.error?.message ?? `请求失败（${res.status}）`);
+  }
+  const cd = res.headers.get('content-disposition') ?? '';
+  const star = /filename\*=UTF-8''([^;]+)/i.exec(cd);
+  const plain = /filename="([^"]+)"/i.exec(cd);
+  const name = star ? decodeURIComponent(star[1]) : plain ? plain[1] : filename;
+  const href = URL.createObjectURL(await res.blob());
+  const a = document.createElement('a');
+  a.href = href;
+  a.download = name;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(href), 10_000);
+}
+
+/**
  * 带进度的上传（fetch 拿不到上传进度，这里用 XMLHttpRequest）。
  * onProgress(0~100)；signal 可中途取消。错误格式与 api() 一致。
  */

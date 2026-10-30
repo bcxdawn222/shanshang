@@ -1,6 +1,8 @@
 import ElementPlus from 'element-plus';
 import zhCn from 'element-plus/es/locale/lang/zh-cn';
 import 'element-plus/dist/index.css';
+// 商家后台暗色主题（SET-04）：html.dark 时生效
+import 'element-plus/theme-chalk/dark/css-vars.css';
 import { createApp } from 'vue';
 import App from './App.vue';
 import { router } from './router.js';

@@ -26,6 +26,10 @@ const routes = [
       { path: 'snapshots', component: () => import('./views/admin/Snapshots.vue'), meta: { title: '快照核销' } },
       { path: 'settings', component: () => import('./views/admin/Settings.vue'), meta: { title: '平台设置' } },
       { path: 'audit-logs', component: () => import('./views/admin/AuditLogs.vue'), meta: { title: '操作日志' } },
+      // Phase 7：数据统计、留言反馈、站点信息
+      { path: 'stats', component: () => import('./views/admin/Stats.vue'), meta: { title: '数据统计' } },
+      { path: 'feedback', component: () => import('./views/admin/Feedback.vue'), meta: { title: '留言反馈' } },
+      { path: 'site-extras', component: () => import('./views/admin/SiteExtras.vue'), meta: { title: '站点信息' } },
       { path: 'password', component: () => import('./views/Password.vue'), meta: { title: '修改口令' } },
     ],
   },
@@ -40,6 +44,11 @@ const routes = [
       { path: 'points', component: () => import('./views/merchant/Points.vue'), meta: { title: '积分与充值' } },
       // 也是手机扫码入口：/s/<token> 页底部“商家核销”链到 #/merchant/redeem?token=<token>
       { path: 'redeem', component: () => import('./views/merchant/Redeem.vue'), meta: { title: '核销' } },
+      // Phase 7：数据统计、联系我们、留言反馈、打赏作者
+      { path: 'stats', component: () => import('./views/merchant/Stats.vue'), meta: { title: '数据统计' } },
+      { path: 'contact', component: () => import('./views/merchant/Contact.vue'), meta: { title: '联系我们' } },
+      { path: 'feedback', component: () => import('./views/merchant/Feedback.vue'), meta: { title: '留言反馈' } },
+      { path: 'tip', component: () => import('./views/merchant/Tip.vue'), meta: { title: '打赏作者' } },
       { path: 'password', component: () => import('./views/Password.vue'), meta: { title: '修改密码' } },
     ],
   },
