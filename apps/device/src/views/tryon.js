@@ -2,6 +2,7 @@ import { errorMessage, mediaUrl, request } from '../api.js';
 import { button, h, toast } from '../dom.js';
 import { bindTap } from '../tap.js';
 import { createBilling } from '../segments.js';
+import { getDeviceConfig } from '../config.js';
 
 /**
  * 实时试穿页（复用 xmax-tryon 已验证链路）：
@@ -17,6 +18,7 @@ const DEFAULT_STREAM = { width: 1472, height: 832, fps: 24, maxKbps: 1200 };
 const MAX_RECONNECTS = 2;
 const BACKOFF_MS = [3000, 10000];
 const URL_CACHE_KEY = 'shanshang.xmax-urls.v1';
+const LIMIT_CONFIRM_SECONDS = 15; // 试穿到上限后“点击继续”的等待秒数
 
 const kiosk = () => window.MagicMirrorKiosk;
 
@@ -140,8 +142,57 @@ export function tryonEntry(items, garmentId) {
       const rail = h('div', { class: 'tryon-rail', role: 'list' });
       const endBtn = button('结束试穿', () => nav.back(), 'btn btn-danger tryon-end');
 
+      // 试穿时长上限：从进入试穿起计时，到时弹全屏“点击继续”，倒计时内无人点则结束试穿回首页
+      const enteredAt = performance.now();
+      let limitTimer = null;
+      let countdownTimer = null;
+      const limitText = h('p', { class: 'tryon-limit-text' });
+      const limitCount = h('p', { class: 'tryon-limit-count' });
+      const limit = h(
+        'div',
+        { class: 'tryon-limit', role: 'alertdialog', 'aria-live': 'assertive', hidden: true },
+        limitText,
+        h('p', { class: 'tryon-limit-tip' }, '点击屏幕任意位置继续'),
+        limitCount,
+      );
+
+      function armLimit() {
+        clearTimeout(limitTimer);
+        limitTimer = setTimeout(promptLimit, getDeviceConfig().tryonMaxMinutes * 60_000);
+      }
+
+      function promptLimit() {
+        if (disposed) return;
+        let left = LIMIT_CONFIRM_SECONDS;
+        const minutes = Math.max(1, Math.round((performance.now() - enteredAt) / 60_000));
+        limitText.textContent = `已试穿 ${minutes} 分钟，点击继续`;
+        limitCount.textContent = `${left} 秒后自动结束试穿`;
+        limit.hidden = false;
+        clearInterval(countdownTimer);
+        countdownTimer = setInterval(() => {
+          left -= 1;
+          if (left > 0) {
+            limitCount.textContent = `${left} 秒后自动结束试穿`;
+            return;
+          }
+          clearInterval(countdownTimer);
+          countdownTimer = null;
+          nav.home(); // cleanup 里断开会话并结算离屏
+        }, 1000);
+      }
+
+      function continueTryon() {
+        if (limit.hidden || disposed) return;
+        clearInterval(countdownTimer);
+        countdownTimer = null;
+        limit.hidden = true;
+        armLimit();
+      }
+
+      bindTap(limit, continueTryon);
+
       root.append(
-        h('div', { class: 'tryon' }, remote, local, status, badge, endBtn, h('footer', { class: 'tryon-bar' }, rail)),
+        h('div', { class: 'tryon' }, remote, local, status, badge, endBtn, h('footer', { class: 'tryon-bar' }, rail), limit),
       );
 
       function setStatus(text, actions = []) {
@@ -313,6 +364,8 @@ export function tryonEntry(items, garmentId) {
         if (disposed) return;
         disposed = true;
         clearTimeout(retryTimer);
+        clearTimeout(limitTimer);
+        clearInterval(countdownTimer);
         billing.close({ keepalive });
         const s = session;
         session = null;
@@ -324,6 +377,7 @@ export function tryonEntry(items, garmentId) {
 
       updateBadge();
       renderRail();
+      armLimit();
       if (!current()) {
         setStatus('没有可试穿的服饰', [button('返回', () => nav.back(), 'btn btn-ghost')]);
       } else {

@@ -546,3 +546,182 @@ body.mode-tryon .view {
 .toast[hidden] {
   display: none;
 }
+
+/* ───────── 热门榜：名次 + 试穿次数 ───────── */
+.garment-rank {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  padding: 4px 12px;
+  border-radius: 999px;
+  font-size: clamp(14px, 1.6vw, 22px);
+  font-weight: 700;
+  color: #fff;
+  background: rgba(20, 20, 32, 0.72);
+}
+
+.garment-rank.top {
+  background: var(--accent);
+}
+
+.garment-count {
+  padding: 0 10px 14px;
+  margin-top: -8px;
+  font-size: clamp(14px, 1.6vw, 22px);
+  font-weight: 400;
+  color: var(--muted);
+}
+
+/* ───────── 热播短剧同款：专题海报 ───────── */
+.drama-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 2.4vw;
+  padding-bottom: 4vh;
+}
+
+.drama-card {
+  display: flex;
+  flex-direction: column;
+  padding: 0;
+  overflow: hidden;
+}
+
+.drama-poster {
+  width: 100%;
+  aspect-ratio: 3 / 4;
+  object-fit: cover;
+  background: rgba(127, 127, 127, 0.15);
+  pointer-events: none;
+}
+
+.drama-poster.is-empty {
+  display: grid;
+  place-items: center;
+  font-size: clamp(56px, 9vw, 120px);
+}
+
+.drama-title {
+  padding: 14px 12px 18px;
+  font-size: var(--fs-body);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ───────── 试穿时长上限遮罩 ───────── */
+.tryon-limit {
+  position: absolute;
+  inset: 0;
+  z-index: 60;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3vh;
+  padding: 0 8vw;
+  text-align: center;
+  color: #fff;
+  background: rgba(0, 0, 0, 0.78);
+  cursor: pointer;
+}
+
+.tryon-limit[hidden] {
+  display: none;
+}
+
+.tryon-limit p {
+  margin: 0;
+}
+
+.tryon-limit-text {
+  font-size: var(--fs-big);
+  font-weight: 700;
+}
+
+.tryon-limit-tip {
+  font-size: var(--fs-body);
+  color: #dfe3f0;
+}
+
+.tryon-limit-count {
+  font-size: var(--fs-body);
+  color: #ffb3c6;
+}
+
+/* ───────── 待机播放页（全屏，不连接摄像头） ───────── */
+.player {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  overflow: hidden;
+  background: var(--bg);
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+body.theme-black .player {
+  background: #000;
+}
+
+.player-slot {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  transition: opacity 0.8s ease;
+  pointer-events: none;
+}
+
+.player-slot.show {
+  opacity: 1;
+}
+
+.player-media {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+  pointer-events: none;
+}
+
+.player-standby {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3vh;
+  text-align: center;
+  color: var(--fg);
+  pointer-events: none;
+}
+
+.player-standby[hidden] {
+  display: none;
+}
+
+.player-standby p {
+  margin: 0;
+}
+
+.standby-logo {
+  max-width: 40vw;
+  max-height: 24vh;
+  object-fit: contain;
+}
+
+.standby-name {
+  font-size: clamp(48px, 8vw, 120px);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  background: var(--accent);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.standby-tip {
+  font-size: var(--fs-body);
+  color: var(--muted);
+}

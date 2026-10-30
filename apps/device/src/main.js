@@ -2,14 +2,19 @@ import './style.css';
 import { clearIdentity, errorMessage, loadIdentity, mediaUrl, request, saveIdentity, setToken } from './api.js';
 import { h } from './dom.js';
 import { invalidateGarments } from './garments.js';
+import { getDeviceConfig, setDeviceConfig } from './config.js';
+import { startIdleWatch } from './idle.js';
+import { refreshPlaylist } from './playlist.js';
 import { createRouter } from './router.js';
 import { flushSegments } from './segments.js';
 import { homeEntry } from './views/home.js';
+import { isPlayerActive, playerEntry } from './views/player.js';
 
 const POLL_MS = 5000; // 未绑定时轮询绑定状态
 const BOUND_POLL_MS = 60_000; // 已绑定后低频确认没被停用
 const RETRY_MS = 15000;
 const HEARTBEAT_MS = 30_000;
+const REFRESH_MS = 5 * 60_000; // 定时重拉配置和播放列表，后台改了投放不用重启
 
 const view = document.getElementById('view');
 const brand = document.getElementById('brand');
@@ -18,6 +23,8 @@ const router = createRouter(view);
 let identity = null;
 let mode = null; // null | 'pending' | 'bound' | 'disabled' | 'error'
 let heartbeatTimer = null;
+let refreshTimer = null;
+let idleWatch = null;
 
 // ───────── 主题（总后台按设备下发 black / white） ─────────
 
@@ -27,8 +34,9 @@ function applyBackground(background) {
   document.body.classList.toggle('theme-black', theme === 'black');
 }
 
-function applyConfig(cfg) {
-  if (!cfg) return;
+function applyConfig(raw) {
+  if (!raw) return;
+  const cfg = setDeviceConfig(raw);
   applyBackground(cfg.background);
   const name = cfg.platformName || '闪裳Live';
   document.title = name;
@@ -44,9 +52,32 @@ async function loadConfig() {
   try {
     const { status, data } = await request('device/config');
     if (status === 200) applyConfig(data);
+    else console.warn('[config] 获取设备配置失败，沿用本地配置', status);
   } catch (error) {
-    console.warn('[config] 获取设备配置失败', error?.message || error);
+    console.warn('[config] 获取设备配置失败，沿用本地配置', error?.message || error);
   }
+}
+
+/** 试穿中不下载广告素材，免得和实时画面抢带宽；下一轮再补 */
+const inTryon = () => document.body.classList.contains('mode-tryon') && !isPlayerActive();
+
+async function refreshContent() {
+  if (mode !== 'bound') return;
+  await loadConfig();
+  if (!inTryon()) await refreshPlaylist();
+}
+
+function startRefresh() {
+  if (refreshTimer) return;
+  refreshTimer = setInterval(() => void refreshContent(), REFRESH_MS);
+}
+
+// ───────── 空闲：无操作进入待机播放；试穿页的 cleanup 负责 disconnect + 结算离屏 ─────────
+
+function goIdle() {
+  if (mode !== 'bound' || isPlayerActive()) return;
+  router.reset(homeEntry);
+  router.push(playerEntry);
 }
 
 // ───────── 心跳：在线状态 + 背景切换 + 顺带补传计费队列 ─────────
@@ -102,9 +133,12 @@ function showError(message) {
 
 function enterBound() {
   invalidateGarments();
-  void loadConfig();
   void flushSegments();
   router.reset(homeEntry);
+  void refreshContent();
+  startRefresh();
+  if (!idleWatch) idleWatch = startIdleWatch(goIdle);
+  else idleWatch.reset();
 }
 
 // ───────── 注册 / 绑定轮询（沿用原流程） ─────────
@@ -165,6 +199,6 @@ async function tick() {
   setTimeout(tick, delay);
 }
 
-applyBackground('black');
+applyBackground(getDeviceConfig().background);
 renderMessage([{ text: '正在连接…' }]);
 tick();

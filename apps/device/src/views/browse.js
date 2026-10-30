@@ -122,17 +122,21 @@ function browseCategory(nav, { filter, path }) {
   );
 }
 
-/** 服饰网格：点击进入试穿，试穿页底部服饰条就是这个列表 */
-function garmentGrid(items, nav) {
+/** 服饰网格：点击进入试穿，试穿页底部服饰条就是这个列表；ranked 时显示名次和试穿次数（热门榜） */
+export function garmentGrid(items, nav, { ranked = false } = {}) {
   return h(
     'div',
     { class: 'garment-grid' },
-    items.map((g) =>
+    items.map((g, i) =>
       button(
         [
           h('img', { class: 'garment-img', src: mediaUrl(g.imagePath), alt: g.title || '', loading: 'lazy', draggable: 'false' }),
           h('span', { class: 'garment-title' }, g.title || ''),
+          ranked && Number.isFinite(Number(g.tryonCount))
+            ? h('span', { class: 'garment-count' }, `${Number(g.tryonCount)} 次试穿`)
+            : null,
           g.discountText ? h('span', { class: 'garment-discount' }, g.discountText) : null,
+          ranked ? h('span', { class: `garment-rank${i < 3 ? ' top' : ''}` }, `TOP ${i + 1}`) : null,
         ],
         () => nav.push(tryonEntry(items, g.id)),
         'btn garment-card',
