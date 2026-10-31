@@ -1,12 +1,43 @@
-/* 闪裳Live 设备前台：55 寸竖屏广告机。按钮最小 64px，字号按视口宽度缩放 */
+/* 闪裳Live 设备前台：55 寸竖屏广告机。按钮最小 64px，字号按视口宽度缩放
+ * 视觉：iOS / visionOS 毛玻璃风格。玻璃参数集中在 :root，主题色集中在 body.theme-*。
+ * 性能约定（低端 Android / Windows 盒子）：
+ *   - backdrop-filter 只用在少量浮层和卡片上（首页入口、选项、返回栏、运势卡、toast、弹层卡片、试穿角标/服饰条）；
+ *   - 大列表（服饰 / 短剧网格、31 天日期、试穿缩略图）和转盘不做 blur，只用半透明纯色；
+ *   - 背景光斑是静态 radial-gradient，没有任何持续动画；
+ *   - 想整体关掉模糊：把 --glass-filter / --glass-filter-video / --overlay-filter 改成 none 即可。
+ */
 :root {
+  /* ── 玻璃参数（调这里） ── */
+  --glass-blur: 24px;
+  --glass-saturate: 180%;
+  --glass-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+  /* 浮在实时画面上的控件（角标、服饰条）：画面每帧都在变，模糊要逐帧重算，单独一个开关 */
+  --glass-filter-video: blur(20px) saturate(160%);
+  /* 「点击继续」全屏遮罩的模糊：只在提示时短暂出现 */
+  --overlay-filter: blur(12px);
+
+  --radius-card: 24px;
+  --radius-panel: 28px;
+  --radius-btn: 20px;
+  --radius: var(--radius-btn);
+
+  --press-scale: 0.97;
+  --press-ms: 120ms;
+
+  /* ── 尺寸 / 字号（保持原有触控尺寸与竖屏字号） ── */
   --touch: 64px;
-  --radius: 22px;
-  --accent: linear-gradient(90deg, #ff4fd8, #6c8cff);
-  --danger: linear-gradient(135deg, #ff5f8f, #ff8a5f);
   --fs-body: clamp(20px, 2.6vw, 34px);
   --fs-big: clamp(26px, 3.6vw, 48px);
-  font-family: -apple-system, 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  --fs-small: clamp(16px, 1.9vw, 24px);
+
+  /* ── 强调色（白字按钮统一 700 字重，满足 WCAG 大字号 3:1；深端色块 ≥4.5:1） ── */
+  --accent-solid: #0a84ff;
+  --primary: linear-gradient(180deg, #0a84ff 0%, #0071e3 100%);
+  --danger: linear-gradient(180deg, #ff453a 0%, #e0241b 100%);
+
+  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'PingFang SC', 'Helvetica Neue', 'Microsoft YaHei',
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
 }
 
 * {
@@ -25,29 +56,81 @@ body {
   user-select: none;
   -webkit-user-select: none;
   -webkit-tap-highlight-color: transparent;
-  transition: background-color 0.3s ease, color 0.3s ease;
+  background: var(--scene-bg);
+  color: var(--fg);
+  transition: color 0.3s ease;
 }
 
 /* ───────── 主题：总后台按设备下发 black / white ───────── */
 body.theme-black {
-  --bg: #0b0b16;
-  --fg: #f2f3f7;
-  --muted: #a3a7b8;
-  --card: rgba(255, 255, 255, 0.07);
-  --card-stroke: rgba(255, 255, 255, 0.14);
-  background: radial-gradient(circle at 30% 20%, #2a1f4f, #0b0b16 70%) fixed;
-  color: var(--fg);
+  --bg: #07070f;
+  --fg: #f5f5f7;
+  --fg-2: #dcdce4;
+  --muted: #b4b4c0;
+  --error: #ff6961;
+  --star: #ffd60a;
+  --brand: linear-gradient(90deg, #ff4fd8, #7b5cff 55%, #6c8cff);
+  --brand-strong: linear-gradient(90deg, #d61fb3, #5a3dff);
+
+  --glass-bg: rgba(255, 255, 255, 0.08);
+  --glass-bg-press: rgba(255, 255, 255, 0.16);
+  --glass-bg-strong: rgba(28, 28, 42, 0.62);
+  --glass-lite-bg: rgba(30, 30, 46, 0.62);
+  --glass-lite-press: rgba(52, 52, 74, 0.7);
+  --glass-stroke: rgba(255, 255, 255, 0.16);
+  --glass-inset: inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  --glass-shadow: 0 16px 40px rgba(0, 0, 0, 0.38);
+  --glass-shadow-sm: 0 8px 22px rgba(0, 0, 0, 0.28);
+  --chip-bg: rgba(255, 255, 255, 0.1);
+
+  /* 试穿页浮在画面上的控件 */
+  --float-bg: rgba(18, 18, 28, 0.5);
+  --float-fg: #ffffff;
+  --float-muted: #d1d1d6;
+  --float-stroke: rgba(255, 255, 255, 0.2);
+  --float-thumb-bg: rgba(18, 18, 28, 0.66);
+  --badge-discount: #ffb3c6;
+
+  /* 静态背景：深色渐变 + 三个大光斑（粉 / 紫 / 蓝），不动 */
+  --scene-bg: radial-gradient(circle 48vmax at 10% 6%, rgba(255, 79, 216, 0.28), transparent 70%),
+    radial-gradient(circle 46vmax at 96% 36%, rgba(123, 92, 255, 0.32), transparent 70%),
+    radial-gradient(circle 52vmax at 24% 96%, rgba(108, 140, 255, 0.26), transparent 70%),
+    linear-gradient(165deg, #14112a 0%, #07070f 52%, #0b0e1f 100%);
   color-scheme: dark;
 }
 
 body.theme-white {
-  --bg: #f6f7fb;
-  --fg: #16182a;
-  --muted: #5d6275;
-  --card: #ffffff;
-  --card-stroke: rgba(22, 24, 42, 0.12);
-  background: radial-gradient(circle at 30% 20%, #ffe9fa, #f6f7fb 70%) fixed;
-  color: var(--fg);
+  --bg: #f2f2f7;
+  --fg: #1c1c1e;
+  --fg-2: #3a3a44;
+  --muted: #545460;
+  --error: #d70015;
+  --star: #a86b00;
+  --brand: linear-gradient(90deg, #d61fb3, #6a3dff 55%, #3d5cff);
+  --brand-strong: linear-gradient(90deg, #d61fb3, #5a3dff);
+
+  --glass-bg: rgba(255, 255, 255, 0.55);
+  --glass-bg-press: rgba(225, 225, 238, 0.7);
+  --glass-bg-strong: rgba(255, 255, 255, 0.74);
+  --glass-lite-bg: rgba(255, 255, 255, 0.78);
+  --glass-lite-press: rgba(232, 232, 242, 0.88);
+  --glass-stroke: rgba(255, 255, 255, 0.75);
+  --glass-inset: inset 0 1px 0 rgba(255, 255, 255, 0.85);
+  --glass-shadow: 0 16px 40px rgba(60, 60, 110, 0.14);
+  --glass-shadow-sm: 0 8px 22px rgba(60, 60, 110, 0.1);
+  --chip-bg: rgba(28, 28, 30, 0.06);
+
+  --float-bg: rgba(255, 255, 255, 0.64);
+  --float-fg: #1c1c1e;
+  --float-muted: #3c3c43;
+  --float-stroke: rgba(255, 255, 255, 0.7);
+  --float-thumb-bg: rgba(255, 255, 255, 0.8);
+  --badge-discount: #c4005a;
+
+  --scene-bg: radial-gradient(circle 48vmax at 10% 6%, rgba(255, 79, 216, 0.2), transparent 70%),
+    radial-gradient(circle 46vmax at 96% 36%, rgba(123, 92, 255, 0.18), transparent 70%),
+    radial-gradient(circle 52vmax at 24% 96%, rgba(108, 140, 255, 0.2), transparent 70%),
+    linear-gradient(165deg, #faf7ff 0%, #f2f2f7 52%, #eef1fb 100%);
   color-scheme: light;
 }
 
@@ -67,12 +150,13 @@ body.theme-white {
   justify-content: center;
   gap: 0.4em;
   font-size: clamp(40px, 6vw, 88px);
-  letter-spacing: 0.08em;
+  font-weight: 700;
+  letter-spacing: 0.06em;
   text-align: center;
 }
 
 .brand span {
-  background: var(--accent);
+  background: var(--brand);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
@@ -114,7 +198,9 @@ body.theme-white {
 
 .code {
   margin: 24px 0;
-  font-family: Consolas, 'Courier New', monospace;
+  padding: 2.4vh 4vw;
+  border-radius: var(--radius-panel);
+  font-family: 'SF Mono', Consolas, 'Courier New', monospace;
   font-size: clamp(56px, 9vw, 140px);
   font-weight: 700;
   letter-spacing: 0.18em;
@@ -122,11 +208,11 @@ body.theme-white {
 }
 
 .hint {
-  font-size: clamp(16px, 1.9vw, 24px) !important;
+  font-size: var(--fs-small) !important;
 }
 
 .error {
-  color: #ff6b6b !important;
+  color: var(--error) !important;
 }
 
 /* ───────── 按钮 ───────── */
@@ -134,39 +220,77 @@ body.theme-white {
   min-height: var(--touch);
   min-width: var(--touch);
   padding: 0 28px;
-  border: 1px solid var(--card-stroke);
-  border-radius: var(--radius);
-  background: var(--card);
+  border: 1px solid var(--glass-stroke);
+  border-radius: var(--radius-btn);
+  background: var(--glass-bg);
+  box-shadow: var(--glass-inset);
   color: var(--fg);
   font: inherit;
   font-size: var(--fs-body);
   font-weight: 600;
   cursor: pointer;
-  transition: transform 0.1s ease, opacity 0.2s ease;
+  transition: transform var(--press-ms) ease, background-color var(--press-ms) ease, filter var(--press-ms) ease,
+    opacity 0.2s ease;
 }
 
 .btn:active {
-  transform: scale(0.97);
+  transform: scale(var(--press-scale));
+  background-color: var(--glass-bg-press);
 }
 
 .btn[disabled] {
   opacity: 0.45;
 }
 
-.btn-primary {
-  border: 0;
-  color: #fff;
-  background: var(--accent);
-}
-
+.btn-primary,
 .btn-danger {
   border: 0;
   color: #fff;
+  font-weight: 700;
+  box-shadow: 0 10px 26px rgba(0, 0, 0, 0.22), inset 0 1px 0 rgba(255, 255, 255, 0.25);
+}
+
+.btn-primary {
+  background: var(--primary);
+}
+
+.btn-danger {
   background: var(--danger);
 }
 
+.btn-primary:active,
+.btn-danger:active {
+  filter: brightness(0.88);
+}
+
 .btn-ghost {
-  background: transparent;
+  border-color: transparent;
+  background: var(--chip-bg);
+  box-shadow: none;
+}
+
+/* ───────── 玻璃材质（重：带 backdrop-filter，只给少量元素）─────────
+ * 放在 .btn 之后，同优先级时覆盖按钮默认底色 */
+.home-tile,
+.option,
+.pick-grid:not(.cols-7) .pick,
+.page-head,
+.fortune-card,
+.code,
+.standby-logo,
+.toast,
+.snap-card {
+  border: 1px solid var(--glass-stroke);
+  background: var(--glass-bg);
+  box-shadow: var(--glass-shadow-sm), var(--glass-inset);
+  -webkit-backdrop-filter: var(--glass-filter);
+  backdrop-filter: var(--glass-filter);
+}
+
+.home-tile:active,
+.option:active,
+.pick-grid:not(.cols-7) .pick:active {
+  background-color: var(--glass-bg-press);
 }
 
 /* ───────── 首页 ───────── */
@@ -192,6 +316,7 @@ body.theme-white {
   justify-content: center;
   gap: 12px;
   padding: 20px;
+  border-radius: var(--radius-card);
 }
 
 .home-icon {
@@ -202,7 +327,7 @@ body.theme-white {
 .home-label {
   font-size: var(--fs-big);
   font-weight: 700;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.04em;
 }
 
 .home-tile.is-soon {
@@ -216,7 +341,7 @@ body.theme-white {
   padding: 4px 14px;
   border-radius: 999px;
   font-size: clamp(14px, 1.6vw, 22px);
-  background: rgba(127, 127, 127, 0.25);
+  background: var(--chip-bg);
 }
 
 /* ───────── 二级页 ───────── */
@@ -227,11 +352,14 @@ body.theme-white {
   min-height: 100%;
 }
 
+/* 顶部返回栏：一条玻璃胶囊 */
 .page-head {
   display: grid;
   grid-template-columns: auto 1fr auto;
   align-items: center;
   gap: 16px;
+  padding: 10px;
+  border-radius: var(--radius-panel);
 }
 
 .page-title {
@@ -242,11 +370,12 @@ body.theme-white {
 .page-title h2 {
   margin: 0;
   font-size: var(--fs-big);
+  font-weight: 700;
 }
 
 .page-title p {
   margin: 6px 0 0;
-  font-size: clamp(16px, 1.9vw, 24px);
+  font-size: var(--fs-small);
   color: var(--muted);
   overflow: hidden;
   text-overflow: ellipsis;
@@ -278,6 +407,7 @@ body.theme-white {
   align-items: center;
   justify-content: center;
   gap: 8px;
+  border-radius: var(--radius-card);
 }
 
 .opt-label {
@@ -286,11 +416,12 @@ body.theme-white {
 }
 
 .opt-sub {
-  font-size: clamp(16px, 1.9vw, 24px);
+  font-size: var(--fs-small);
   color: var(--muted);
   font-weight: 400;
 }
 
+/* 服饰 / 短剧网格：卡片多，不做 blur，用半透明纯色 */
 .garment-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -298,12 +429,21 @@ body.theme-white {
   padding-bottom: 4vh;
 }
 
-.garment-card {
+.garment-card,
+.drama-card {
   position: relative;
   display: flex;
   flex-direction: column;
   padding: 0;
   overflow: hidden;
+  border-radius: var(--radius-card);
+  background: var(--glass-lite-bg);
+  box-shadow: var(--glass-shadow-sm), var(--glass-inset);
+}
+
+.garment-card:active,
+.drama-card:active {
+  background-color: var(--glass-lite-press);
 }
 
 .garment-img {
@@ -329,11 +469,13 @@ body.theme-white {
   padding: 4px 12px;
   border-radius: 999px;
   font-size: clamp(14px, 1.6vw, 22px);
+  font-weight: 700;
   color: #fff;
-  background: var(--danger);
+  /* 小字号白字：用更深的苹果红实色，保证 ≥4.5:1 */
+  background: #d70015;
 }
 
-/* ───────── 试穿（全屏） ───────── */
+/* ───────── 试穿（全屏）：实时画面不盖玻璃，只有浮层控件用玻璃 ───────── */
 body.mode-tryon #app {
   padding: 0;
   gap: 0;
@@ -373,10 +515,11 @@ body.mode-tryon .view {
   top: 24px;
   width: clamp(120px, 16vw, 220px);
   aspect-ratio: 3 / 4;
-  border-radius: 18px;
+  border-radius: 20px;
   overflow: hidden;
-  border: 1px solid rgba(255, 255, 255, 0.25);
+  border: 1px solid rgba(255, 255, 255, 0.28);
   background: #0a0f1b;
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.4);
 }
 
 .tryon-local:empty {
@@ -404,6 +547,7 @@ body.mode-tryon .view {
 .tryon-status-text {
   margin: 0;
   font-size: var(--fs-big);
+  font-weight: 600;
 }
 
 .tryon-status-actions {
@@ -411,8 +555,11 @@ body.mode-tryon .view {
   gap: 24px;
 }
 
-.tryon-status-actions .btn {
-  color: #fff;
+/* 画面上的次要按钮：跟随浮层配色（深色主题深玻璃白字，白色主题浅玻璃黑字） */
+.tryon .btn-ghost {
+  border-color: var(--float-stroke);
+  background: var(--float-bg);
+  color: var(--float-fg);
 }
 
 /* 角标放右上：右下角是外壳悬浮球 */
@@ -423,10 +570,13 @@ body.mode-tryon .view {
   z-index: 30;
   width: clamp(180px, 22vw, 300px);
   padding: 18px;
-  border-radius: 20px;
-  background: rgba(10, 12, 24, 0.72);
-  border: 1px solid rgba(255, 255, 255, 0.16);
-  backdrop-filter: blur(10px);
+  border-radius: var(--radius-card);
+  border: 1px solid var(--float-stroke);
+  background: var(--float-bg);
+  box-shadow: var(--glass-shadow), var(--glass-inset);
+  -webkit-backdrop-filter: var(--glass-filter-video);
+  backdrop-filter: var(--glass-filter-video);
+  color: var(--float-fg);
   text-align: center;
 }
 
@@ -436,7 +586,7 @@ body.mode-tryon .view {
 
 .badge-title {
   font-size: clamp(14px, 1.6vw, 22px);
-  color: #b9bfd3;
+  color: var(--float-muted);
 }
 
 .badge-location {
@@ -446,8 +596,9 @@ body.mode-tryon .view {
 }
 
 .badge-discount {
-  font-size: clamp(16px, 1.9vw, 24px);
-  color: #ffb3c6;
+  font-size: var(--fs-small);
+  font-weight: 600;
+  color: var(--badge-discount);
 }
 
 /* 扫码领优惠按钮：在右上角标里，避开右下角悬浮球；触控区 ≥64px */
@@ -459,17 +610,20 @@ body.mode-tryon .view {
   display: grid;
   place-items: center;
   border: 0;
-  border-radius: 14px;
-  background: var(--accent);
+  border-radius: 16px;
+  background: var(--primary);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.25);
   font: inherit;
   font-size: clamp(18px, 2vw, 26px);
   font-weight: 700;
   color: #fff;
   cursor: pointer;
+  transition: transform var(--press-ms) ease, filter var(--press-ms) ease, opacity 0.2s ease;
 }
 
 .badge-qr:active {
-  transform: scale(0.97);
+  transform: scale(var(--press-scale));
+  filter: brightness(0.88);
 }
 
 .badge-qr[disabled] {
@@ -486,7 +640,7 @@ body.mode-tryon .view {
   align-items: center;
   justify-content: center;
   padding: 0 8vw;
-  background: rgba(0, 0, 0, 0.6);
+  background: rgba(0, 0, 0, 0.5);
 }
 
 .snap-layer[hidden] {
@@ -496,11 +650,11 @@ body.mode-tryon .view {
 .snap-card {
   width: min(84vw, 720px);
   padding: 4vh 4vw;
-  border-radius: 28px;
-  background: rgba(14, 16, 30, 0.94);
-  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 32px;
+  background: var(--glass-bg-strong);
+  box-shadow: var(--glass-shadow), var(--glass-inset);
   text-align: center;
-  color: #fff;
+  color: var(--fg);
 }
 
 .snap-card p {
@@ -514,9 +668,10 @@ body.mode-tryon .view {
 
 .snap-tip {
   font-size: var(--fs-body);
-  color: #dfe3f0;
+  color: var(--fg-2);
 }
 
+/* 二维码：纯白不透明底 + 留白，保证识别 */
 .snap-qr {
   width: min(60vw, 480px);
   aspect-ratio: 1;
@@ -524,6 +679,7 @@ body.mode-tryon .view {
   padding: 16px;
   border-radius: 20px;
   background: #fff;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
 }
 
 .snap-qr-img {
@@ -548,37 +704,49 @@ body.mode-tryon .view {
 
 .snap-actions .btn {
   min-width: 200px;
-  color: #fff;
+}
+
+/* 弹层卡片本身是主题玻璃，里面的次要按钮跟随主题，不用画面浮层色 */
+.snap-actions .btn-ghost {
+  border-color: transparent;
+  background: var(--chip-bg);
+  color: var(--fg);
 }
 
 .snap-count {
   margin: 2vh 0 0 !important;
   font-size: var(--fs-body);
-  color: #a3a7b8;
+  color: var(--muted);
 }
 
+/* 结束试穿：苹果红实色按钮，悬在服饰条上方 */
 .tryon-end {
   position: absolute;
   left: 24px;
-  bottom: calc(clamp(150px, 15vh, 240px) + 28px);
+  bottom: calc(clamp(150px, 15vh, 240px) + 72px);
   z-index: 30;
   padding: 0 40px;
 }
 
-/* 底部服饰条：右侧留出悬浮球空间 */
+/* 底部服饰条：悬浮玻璃面板，右侧留出悬浮球空间 */
 .tryon-bar {
   position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 0;
+  left: 24px;
+  right: 140px;
+  bottom: 24px;
   z-index: 25;
-  padding: 16px 140px 20px 24px;
-  background: linear-gradient(0deg, rgba(0, 0, 0, 0.85), transparent);
+  padding: 12px;
+  border-radius: var(--radius-panel);
+  border: 1px solid var(--float-stroke);
+  background: var(--float-bg);
+  box-shadow: var(--glass-shadow), var(--glass-inset);
+  -webkit-backdrop-filter: var(--glass-filter-video);
+  backdrop-filter: var(--glass-filter-video);
 }
 
 .tryon-rail {
   display: flex;
-  gap: 16px;
+  gap: 14px;
   overflow-x: auto;
   overflow-y: hidden;
   scrollbar-width: none;
@@ -588,21 +756,29 @@ body.mode-tryon .view {
   display: none;
 }
 
+/* 缩略图：数量多，不做 blur */
 .tryon-thumb {
   flex: none;
   width: clamp(110px, 11vw, 170px);
   height: clamp(150px, 15vh, 240px);
   display: flex;
   flex-direction: column;
-  border-radius: 16px;
+  border-radius: 18px;
   overflow: hidden;
-  border: 3px solid rgba(255, 255, 255, 0.15);
-  background: #111;
+  border: 3px solid transparent;
+  background: var(--float-thumb-bg);
+  color: var(--float-fg);
   cursor: pointer;
+  transition: transform var(--press-ms) ease, border-color var(--press-ms) ease;
+}
+
+.tryon-thumb:active {
+  transform: scale(var(--press-scale));
 }
 
 .tryon-thumb.active {
-  border-color: #ff4fd8;
+  border-color: var(--accent-solid);
+  box-shadow: 0 0 0 2px rgba(10, 132, 255, 0.35);
 }
 
 .tryon-thumb img {
@@ -616,6 +792,7 @@ body.mode-tryon .view {
 .tryon-thumb span {
   padding: 6px 8px;
   font-size: clamp(14px, 1.5vw, 20px);
+  font-weight: 600;
   text-align: center;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -631,11 +808,12 @@ body.mode-tryon .view {
   transform: translateX(-50%);
   max-width: 80vw;
   padding: 20px 36px;
-  border-radius: 20px;
+  border-radius: var(--radius-panel);
   font-size: var(--fs-body);
-  color: #fff;
-  background: rgba(20, 20, 32, 0.9);
-  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.4);
+  font-weight: 600;
+  color: var(--fg);
+  background: var(--glass-bg-strong);
+  box-shadow: var(--glass-shadow), var(--glass-inset);
   pointer-events: none;
 }
 
@@ -653,11 +831,11 @@ body.mode-tryon .view {
   font-size: clamp(14px, 1.6vw, 22px);
   font-weight: 700;
   color: #fff;
-  background: rgba(20, 20, 32, 0.72);
+  background: rgba(0, 0, 0, 0.58);
 }
 
 .garment-rank.top {
-  background: var(--accent);
+  background: var(--brand-strong);
 }
 
 .garment-count {
@@ -674,13 +852,6 @@ body.mode-tryon .view {
   grid-template-columns: repeat(2, 1fr);
   gap: 2.4vw;
   padding-bottom: 4vh;
-}
-
-.drama-card {
-  display: flex;
-  flex-direction: column;
-  padding: 0;
-  overflow: hidden;
 }
 
 .drama-poster {
@@ -705,7 +876,7 @@ body.mode-tryon .view {
   white-space: nowrap;
 }
 
-/* ───────── 试穿时长上限遮罩 ───────── */
+/* ───────── 试穿时长上限遮罩（「点击继续」） ───────── */
 .tryon-limit {
   position: absolute;
   inset: 0;
@@ -718,7 +889,9 @@ body.mode-tryon .view {
   padding: 0 8vw;
   text-align: center;
   color: #fff;
-  background: rgba(0, 0, 0, 0.78);
+  background: rgba(0, 0, 0, 0.58);
+  -webkit-backdrop-filter: var(--overlay-filter);
+  backdrop-filter: var(--overlay-filter);
   cursor: pointer;
 }
 
@@ -737,7 +910,7 @@ body.mode-tryon .view {
 
 .tryon-limit-tip {
   font-size: var(--fs-body);
-  color: #dfe3f0;
+  color: #e5e5ea;
 }
 
 .tryon-limit-count {
@@ -745,7 +918,7 @@ body.mode-tryon .view {
   color: #ffb3c6;
 }
 
-/* ───────── 待机播放页（全屏，不连接摄像头） ───────── */
+/* ───────── 待机播放页（全屏，不连接摄像头；视频/图片不加玻璃） ───────── */
 .player {
   position: fixed;
   inset: 0;
@@ -758,6 +931,11 @@ body.mode-tryon .view {
 
 body.theme-black .player {
   background: #000;
+}
+
+/* 只在 Logo 待机画面时铺品牌背景（不支持 :has 的内核保持纯色，不影响功能） */
+.player:has(> .player-standby:not([hidden])) {
+  background: var(--scene-bg);
 }
 
 .player-slot {
@@ -801,17 +979,21 @@ body.theme-black .player {
   margin: 0;
 }
 
+/* 待机 Logo 卡片 */
 .standby-logo {
   max-width: 40vw;
   max-height: 24vh;
+  padding: 3vh 3vw;
+  border-radius: 36px;
   object-fit: contain;
+  box-shadow: var(--glass-shadow), var(--glass-inset);
 }
 
 .standby-name {
   font-size: clamp(48px, 8vw, 120px);
   font-weight: 700;
-  letter-spacing: 0.08em;
-  background: var(--accent);
+  letter-spacing: 0.06em;
+  background: var(--brand);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
@@ -854,11 +1036,19 @@ body.theme-black .player {
   justify-content: center;
   gap: 6px;
   padding: 12px;
+  border-radius: var(--radius-card);
 }
 
+/* 日期网格（最多 31 格）：不做 blur，半透明纯色 */
 .cols-7 .pick {
   min-height: clamp(80px, 7vh, 130px);
   padding: 0;
+  border-radius: 18px;
+  background: var(--glass-lite-bg);
+}
+
+.cols-7 .pick:active {
+  background-color: var(--glass-lite-press);
 }
 
 .pick-icon {
@@ -878,7 +1068,7 @@ body.theme-black .player {
 }
 
 .stars {
-  color: #ffc53d;
+  color: var(--star);
   letter-spacing: 0.12em;
 }
 
@@ -901,9 +1091,14 @@ body.theme-black .player {
   justify-content: center;
 }
 
+/* 转盘外框：画布外圈留白处显示一圈玻璃。转动时画布逐帧重绘，所以不加 blur；
+ * 描边用 inset 阴影而不是 border，避免改变画布内容尺寸（JS 按外框宽度设置像素） */
 .wheel-canvas {
   width: min(82vw, 52vh);
   aspect-ratio: 1 / 1;
+  border-radius: 50%;
+  background: var(--glass-bg);
+  box-shadow: inset 0 0 0 1px var(--glass-stroke), var(--glass-shadow);
   touch-action: none;
   cursor: grab;
 }
@@ -919,7 +1114,7 @@ body.theme-black .player {
 .wheel-hint {
   margin: 1.4vh 0 0;
   text-align: center;
-  font-size: clamp(16px, 1.9vw, 24px);
+  font-size: var(--fs-small);
   color: var(--muted);
 }
 
@@ -940,7 +1135,7 @@ body.theme-black .player {
   font-size: clamp(36px, 5.4vw, 72px);
   font-weight: 800;
   letter-spacing: 0.06em;
-  background: var(--accent);
+  background: var(--brand);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
@@ -964,9 +1159,7 @@ body.theme-black .player {
   align-items: center;
   gap: 2vh;
   padding: 4vh 5vw;
-  border: 1px solid var(--card-stroke);
-  border-radius: var(--radius);
-  background: var(--card);
+  border-radius: var(--radius-panel);
   text-align: center;
 }
 
@@ -975,14 +1168,14 @@ body.theme-black .player {
 }
 
 .fortune-date {
-  font-size: clamp(16px, 1.9vw, 24px);
+  font-size: var(--fs-small);
   color: var(--muted);
 }
 
 .fortune-zodiac {
   font-size: clamp(36px, 5.4vw, 72px);
   font-weight: 800;
-  background: var(--accent);
+  background: var(--brand);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
@@ -1022,5 +1215,31 @@ body.theme-black .player {
   width: 1.2em;
   height: 1.2em;
   border-radius: 50%;
-  border: 2px solid var(--card-stroke);
+  border: 2px solid var(--glass-stroke);
+  box-shadow: var(--glass-shadow-sm);
+}
+
+/* ───────── 降级：不支持 backdrop-filter 时换成更不透明的底色，保证可读 ───────── */
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  body.theme-black {
+    --glass-bg: rgba(40, 38, 62, 0.86);
+    --glass-bg-press: rgba(62, 60, 88, 0.9);
+    --glass-bg-strong: rgba(28, 28, 42, 0.95);
+    --glass-lite-bg: rgba(36, 34, 56, 0.88);
+    --float-bg: rgba(18, 18, 28, 0.86);
+    --chip-bg: rgba(255, 255, 255, 0.14);
+  }
+
+  body.theme-white {
+    --glass-bg: rgba(255, 255, 255, 0.9);
+    --glass-bg-press: rgba(228, 228, 240, 0.95);
+    --glass-bg-strong: rgba(255, 255, 255, 0.96);
+    --glass-lite-bg: rgba(255, 255, 255, 0.92);
+    --float-bg: rgba(255, 255, 255, 0.9);
+    --glass-stroke: rgba(28, 28, 30, 0.1);
+  }
+
+  .tryon-limit {
+    background: rgba(0, 0, 0, 0.8);
+  }
 }
