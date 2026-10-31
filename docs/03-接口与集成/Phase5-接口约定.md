@@ -36,7 +36,7 @@ nginx 需要把 `/sl/s/` 一并代理到服务端（Phase 8 部署时加）。
 
 | 方法 | 路径 | 说明 |
 | --- | --- | --- |
-| POST | `/api/merchant/redeem/lookup` | `{ code }` 或 `{ token }` → `{ id, code, garmentTitle, imageUrl, createdAt, expiresAt, redeemedAt, state }`；`state`: `valid / redeemed / expired`；跨商家统一返回 404，不泄露是否存在 |
+| POST | `/api/merchant/redeem/lookup` | `{ code }` 或 `{ token }` → `{ id, code, garmentTitle, imageUrl, createdAt, expiresAt, redeemedAt, state }`；`state`: `valid / pending / redeemed / expired`（`pending` 为照片生成中，不可核销）；跨商家统一返回 404，不泄露是否存在 |
 | POST | `/api/merchant/redeem` | `{ code }` 或 `{ token }` → 核销成功返回同上；审计 `snapshot.redeem` |
 | GET | `/api/merchant/redemptions` | `page`、`pageSize` → `{ items, total }`，只看自己已核销的 |
 
@@ -50,6 +50,7 @@ nginx 需要把 `/sl/s/` 一并代理到服务端（Phase 8 部署时加）。
 | 409 | `SNAPSHOT_REDEEMED` | 已核销 |
 | 410 | `SNAPSHOT_EXPIRED` | 已过期、作废或图片已清理 |
 | 409 | `SNAPSHOT_IMAGE_EXISTS` | 重复上传图片 |
+| 409 | `SNAPSHOT_PENDING` | 照片还在生成中（已预约、未上传、仍在 10 分钟上传窗口内） |
 
 ## 6. 总后台
 
@@ -60,7 +61,7 @@ nginx 需要把 `/sl/s/` 一并代理到服务端（Phase 8 部署时加）。
 
 - 时间字段一律毫秒时间戳。
 - `imageUrl`：可核销 / 已核销且未清理时为 `/s/<token>/image` 的完整路径（含部署前缀，如 `/sl/s/<token>/image`）或 `media/...` 相对路径；已清理为空字符串。
-- 预约后 10 分钟未上传的作废快照，对外 `state` 一律为 `expired`，不单独区分。
+- 预约后、上传前（10 分钟窗口内）对外 `state` 为 `pending`；超过 10 分钟仍未上传的作废快照为 `expired`。
 - `merchant/redemptions` 每项：`{ id, code, garmentTitle, createdAt, redeemedAt }`。
 - `/s/:token` 页的“商家核销”链接：`<后台地址>/#/merchant/redeem?token=<token>`（后台是 hash 路由，`#/` 不能省）。未登录时后台会先跳登录页，登录后带 `redirect` 回到核销页。
 - 被限流时 429，`message` 用中文提示，后台直接展示。
