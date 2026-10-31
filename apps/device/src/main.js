@@ -1,5 +1,5 @@
 import './style.css';
-import { clearIdentity, errorMessage, loadIdentity, mediaUrl, request, saveIdentity, setToken } from './api.js';
+import { clearIdentity, errorMessage, loadIdentity, logoSrc, request, saveIdentity, setToken } from './api.js';
 import { h } from './dom.js';
 import { invalidateGarments } from './garments.js';
 import { getDeviceConfig, setDeviceConfig } from './config.js';
@@ -43,12 +43,10 @@ function applyConfig(raw) {
   applyBackground(cfg.background);
   const name = cfg.platformName || '闪裳Live';
   document.title = name;
-  const children = [];
-  if (cfg.logoUrl) {
-    children.push(h('img', { class: 'brand-logo', src: mediaUrl(cfg.logoUrl), alt: '', draggable: 'false' }));
-  }
-  children.push(h('span', {}, name));
-  brand.replaceChildren(...children);
+  brand.replaceChildren(
+    h('img', { class: 'brand-logo', src: logoSrc(cfg.logoUrl), alt: '', draggable: 'false' }),
+    h('span', {}, name),
+  );
 }
 
 async function loadConfig() {

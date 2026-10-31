@@ -57,3 +57,8 @@ export function mediaUrl(path) {
   if (/^https?:\/\//i.test(path)) return path;
   return API_BASE + String(path).replace(/^\//, '');
 }
+
+/** 平台 Logo：后台配置了 logoUrl 用配置的，否则用定稿的 B 版图标（ACC-05，public/favicon.svg） */
+export function logoSrc(logoUrl) {
+  return logoUrl ? mediaUrl(logoUrl) : `${import.meta.env.BASE_URL}favicon.svg`;
+}

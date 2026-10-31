@@ -1,4 +1,4 @@
-import { mediaUrl } from '../api.js';
+import { logoSrc } from '../api.js';
 import { getDeviceConfig } from '../config.js';
 import { h } from '../dom.js';
 import { getPlaylist, mediaSource, refreshPlaylist } from '../playlist.js';
@@ -103,7 +103,7 @@ export const playerEntry = {
       });
       const cfg = getDeviceConfig();
       standby.replaceChildren(
-        cfg.logoUrl ? h('img', { class: 'standby-logo', src: mediaUrl(cfg.logoUrl), alt: '', draggable: 'false' }) : null,
+        h('img', { class: 'standby-logo', src: logoSrc(cfg.logoUrl), alt: '', draggable: 'false' }),
         h('p', { class: 'standby-name' }, cfg.platformName),
         h('p', { class: 'standby-tip' }, '触摸屏幕，开始实时试穿'),
       );
