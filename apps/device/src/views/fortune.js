@@ -3,7 +3,7 @@ import { h } from '../dom.js';
 import { colorHex, loadFunConfig, todayStr } from '../fun.js';
 import { loadGarments } from '../garments.js';
 import { garmentGrid } from './browse.js';
-import { GENDER_OPTIONS, genderLabel, pickGrid, runAsync, starText } from './funKit.js';
+import { GENDER_OPTIONS, SHORT_TEXT, genderLabel, isShort, pickGrid, runAsync, starText } from './funKit.js';
 import { pageShell } from './layout.js';
 
 /**
@@ -85,7 +85,7 @@ function resultEntry(month, day, gender) {
               h('p', { class: 'fortune-lucky' }, swatch, h('span', {}, `今日幸运色：${card.luckyColor.label}`)),
             ),
             items.length
-              ? h('p', { class: 'fun-section-title' }, '幸运色穿搭 · 点击试穿')
+              ? h('p', { class: 'fun-section-title' }, isShort(items) ? `幸运色穿搭 · ${SHORT_TEXT}` : '幸运色穿搭 · 点击试穿')
               : h('p', { class: 'page-msg' }, `暂无可推荐的${genderLabel(gender)}服饰`),
             items.length ? garmentGrid(items, nav) : null,
           );

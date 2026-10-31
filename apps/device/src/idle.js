@@ -6,6 +6,13 @@ import { getDeviceConfig } from './config.js';
  */
 const EVENTS = ['pointerdown', 'pointermove', 'pointerup'];
 
+let current = null;
+
+/** 手动重新开始计时：试穿结束（含超时自动结束，没有触屏事件）后调用，PLY-03 */
+export function resetIdle() {
+  current?.reset();
+}
+
 export function startIdleWatch(onIdle) {
   let timer = null;
 
@@ -25,5 +32,6 @@ export function startIdleWatch(onIdle) {
 
   for (const type of EVENTS) window.addEventListener(type, reset, { capture: true, passive: true });
   reset();
-  return { reset };
+  current = { reset };
+  return current;
 }

@@ -4,6 +4,7 @@ import { bindTap } from '../tap.js';
 import { createBilling } from '../segments.js';
 import { trackEvent } from '../events.js';
 import { getDeviceConfig } from '../config.js';
+import { resetIdle } from '../idle.js';
 import { createSnapshotFlow } from './snapshot.js';
 
 /**
@@ -386,6 +387,7 @@ export function tryonEntry(items, garmentId) {
         if (disposed) return;
         disposed = true;
         tryonActive = false;
+        resetIdle(); // PLY-03：试穿结束后重新开始 4 分钟待机计时
         snap.dispose(); // 关闭确认层 / 二维码层并清掉倒计时
         clearTimeout(retryTimer);
         clearTimeout(limitTimer);

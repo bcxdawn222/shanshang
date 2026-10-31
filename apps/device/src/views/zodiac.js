@@ -6,7 +6,7 @@ import { getDeviceSessionId } from '../session.js';
 import { playTick, unlockAudio } from '../tick.js';
 import { TAU, angleAt, indexAt, planSpin, velocityAt } from '../wheel.js';
 import { garmentGrid } from './browse.js';
-import { GENDER_OPTIONS, genderLabel, pickGrid, runAsync } from './funKit.js';
+import { GENDER_OPTIONS, SHORT_TEXT, genderLabel, isShort, pickGrid, runAsync } from './funKit.js';
 import { pageShell } from './layout.js';
 
 /**
@@ -281,7 +281,11 @@ function wheelEntry(zodiac, gender) {
       else list = garmentGrid(items, nav);
       resultBox.replaceChildren(
         h('p', { class: 'wheel-result-title' }, `${short} · ${cell.label}`),
-        h('p', { class: 'wheel-result-sub' }, items?.length ? `${sub} · 为你推荐 ${items.length} 件，点击试穿` : sub),
+        h(
+          'p',
+          { class: 'wheel-result-sub' },
+          items?.length ? `${sub} · ${isShort(items) ? SHORT_TEXT : `为你推荐 ${items.length} 件，点击试穿`}` : sub,
+        ),
         list,
       );
       if (items?.length) resultBox.scrollIntoView({ behavior: 'smooth', block: 'start' });

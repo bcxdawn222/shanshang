@@ -5,7 +5,7 @@ import { loadFunConfig, todayStr } from '../fun.js';
 import { loadGarments } from '../garments.js';
 import { getDeviceSessionId } from '../session.js';
 import { garmentGrid } from './browse.js';
-import { GENDER_OPTIONS, genderLabel, pickGrid, runAsync } from './funKit.js';
+import { GENDER_OPTIONS, SHORT_TEXT, genderLabel, isShort, pickGrid, runAsync } from './funKit.js';
 import { pageShell } from './layout.js';
 
 /**
@@ -102,7 +102,15 @@ function resultEntry(gender, occasion, feeling) {
         if (reset && items.length) toast(`${EXHAUSTED_TEXT}，重新为你挑选`);
         body.replaceChildren(
           items.length
-            ? h('p', { class: 'fun-section-title' }, reset ? `${EXHAUSTED_TEXT} · 已重新挑选` : `为你推荐 ${items.length} 件 · 点击试穿`)
+            ? h(
+                'p',
+                { class: 'fun-section-title' },
+                reset
+                  ? `${EXHAUSTED_TEXT} · 已重新挑选`
+                  : isShort(items)
+                    ? SHORT_TEXT
+                    : `为你推荐 ${items.length} 件 · 点击试穿`,
+              )
             : h('p', { class: 'page-msg' }, `暂无可推荐的${genderLabel(gender)}服饰`),
           items.length ? garmentGrid(items, nav) : null,
           items.length ? button('换一批', () => void refresh(), 'btn btn-primary fun-more') : null,

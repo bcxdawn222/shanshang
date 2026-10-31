@@ -10,6 +10,11 @@ export const GENDER_OPTIONS = [
 
 export const genderLabel = (key) => GENDER_OPTIONS.find((g) => g.key === key)?.label || '';
 
+// FUN-01：推荐不足 3 件时如实提示，不跨性别补（同性别补齐由 matchWheel 负责）
+export const MIN_RECOMMEND = 3;
+export const SHORT_TEXT = '当前上新款式较少，先看看这几款';
+export const isShort = (items) => items.length > 0 && items.length < MIN_RECOMMEND;
+
 /** 异步加载内容：页面离开后不再渲染，失败可重试。返回 cleanup */
 export function runAsync(body, load, render) {
   let alive = true;
