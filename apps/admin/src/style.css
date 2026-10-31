@@ -5,11 +5,7 @@ body,
   margin: 0;
 }
 
-body {
-  font-family: -apple-system, 'PingFang SC', 'Microsoft YaHei', sans-serif;
-  background: #f5f6fa;
-  color: #1f2329;
-}
+/* 字体、页面背景、深浅色变量见 glass.css（商家后台暗色主题 SET-04 也在那里适配） */
 
 .page-head {
   display: flex;
@@ -25,6 +21,6 @@ body {
 }
 
 .muted {
-  color: #8a8f99;
+  color: var(--el-text-color-secondary);
   font-size: 13px;
 }

@@ -38,8 +38,12 @@ const deviceUpdateBody = {
   properties: {
     name: { type: 'string', minLength: 1, maxLength: 40 },
     location: { type: 'string', maxLength: 60 },
+    background: { type: 'string', enum: ['black', 'white'] },
   },
 };
+
+// 设备 2 分钟内有心跳视为在线（设备每 30 秒心跳一次）
+export const ONLINE_WINDOW_MS = 2 * 60_000;
 
 // 空串、http(s) 地址或站内路径
 const urlField = { type: 'string', maxLength: 500, pattern: '^(|https?://\\S+|/\\S*)$' };
@@ -54,7 +58,7 @@ const settingsBody = {
   },
 };
 
-function deviceView(d) {
+function deviceView(d, t) {
   return {
     id: d.id,
     code: d.code,
@@ -64,6 +68,8 @@ function deviceView(d) {
     createdAt: d.created_at,
     boundAt: d.bound_at,
     lastSeenAt: d.last_seen_at,
+    background: d.background,
+    online: d.last_seen_at != null && t - d.last_seen_at <= ONLINE_WINDOW_MS,
   };
 }
 
@@ -180,16 +186,17 @@ export default async function adminRoutes(app, { ctx }) {
 
   // ---------- 设备（DVC-01、DVC-02、ADM-05） ----------
 
-  app.get('/admin/devices', async () => ({
-    items: db
+  app.get('/admin/devices', async () => {
+    const t = now();
+    const rows = db
       .prepare(
         `SELECT * FROM device
           ORDER BY CASE status WHEN 'pending' THEN 0 WHEN 'bound' THEN 1 ELSE 2 END, created_at DESC
           LIMIT 500`,
       )
-      .all()
-      .map(deviceView),
-  }));
+      .all();
+    return { items: rows.map((d) => deviceView(d, t)) };
+  });
 
   app.post('/admin/devices/bind', { schema: { body: bindBody } }, async (request) => {
     const code = request.body.code.toUpperCase();
@@ -208,7 +215,7 @@ export default async function adminRoutes(app, { ctx }) {
       );
       audit(request, 'device.bind', 'device', device.id, { code, name, location });
     })();
-    return { device: deviceView(db.prepare('SELECT * FROM device WHERE id = ?').get(device.id)) };
+    return { device: deviceView(loadDevice(device.id), now()) };
   });
 
   function loadDevice(id) {
@@ -221,11 +228,17 @@ export default async function adminRoutes(app, { ctx }) {
     const device = loadDevice(request.params.id);
     const name = request.body.name?.trim() ?? device.name;
     const location = request.body.location?.trim() ?? device.location;
+    const background = request.body.background ?? device.background;
     db.transaction(() => {
-      db.prepare('UPDATE device SET name = ?, location = ? WHERE id = ?').run(name, location, device.id);
-      audit(request, 'device.update', 'device', device.id, { name, location });
+      db.prepare('UPDATE device SET name = ?, location = ?, background = ? WHERE id = ?').run(
+        name,
+        location,
+        background,
+        device.id,
+      );
+      audit(request, 'device.update', 'device', device.id, { name, location, background });
     })();
-    return { device: deviceView(loadDevice(device.id)) };
+    return { device: deviceView(loadDevice(device.id), now()) };
   });
 
   app.post('/admin/devices/:id/disable', { schema: { params: idParams } }, async (request) => {
@@ -235,7 +248,7 @@ export default async function adminRoutes(app, { ctx }) {
       db.prepare("UPDATE device SET status = 'disabled' WHERE id = ?").run(device.id);
       audit(request, 'device.disable', 'device', device.id, { from: device.status });
     })();
-    return { device: deviceView(loadDevice(device.id)) };
+    return { device: deviceView(loadDevice(device.id), now()) };
   });
 
   app.post('/admin/devices/:id/enable', { schema: { params: idParams } }, async (request) => {
@@ -246,7 +259,7 @@ export default async function adminRoutes(app, { ctx }) {
       db.prepare('UPDATE device SET status = ? WHERE id = ?').run(target, device.id);
       audit(request, 'device.enable', 'device', device.id, { to: target });
     })();
-    return { device: deviceView(loadDevice(device.id)) };
+    return { device: deviceView(loadDevice(device.id), now()) };
   });
 
   // ---------- 平台设置（ACC-04、ACC-05） ----------

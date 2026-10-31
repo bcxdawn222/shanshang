@@ -1,0 +1,55 @@
+# 闪裳Live 服务端
+# 安装：
+#   useradd --system --home-dir /var/lib/shanshang --shell /usr/sbin/nologin shanshang
+#   install -d -m 750 -o shanshang -g shanshang /var/lib/shanshang
+#   install -m 644 shanshang.service /etc/systemd/system/shanshang.service
+#   systemctl daemon-reload && systemctl enable --now shanshang
+# 日志：journalctl -u shanshang -f
+# node 路径以 `command -v node` 为准（需 Node >= 20.6）；用 nvm 装的 node 在 /root 下，服务用户读不到，
+# 请用系统包或 NodeSource 安装到 /usr/bin。
+
+[Unit]
+Description=ShanShang Live server (Fastify)
+After=network.target
+
+[Service]
+Type=simple
+User=shanshang
+Group=shanshang
+# current 是指向 releases/<版本> 的软链，重启时生效新版本
+WorkingDirectory=/opt/shanshang/current/server
+EnvironmentFile=/etc/shanshang/server.env
+ExecStart=/usr/bin/node src/server.js
+Restart=on-failure
+RestartSec=5
+# server.js 收到 SIGTERM 会关闭 HTTP 与数据库
+KillSignal=SIGTERM
+TimeoutStopSec=20
+UMask=0027
+LimitNOFILE=65536
+
+# 加固：代码目录只读，只有数据目录可写
+NoNewPrivileges=true
+ProtectSystem=strict
+ReadWritePaths=/var/lib/shanshang
+ProtectHome=true
+PrivateTmp=true
+PrivateDevices=true
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectKernelLogs=true
+ProtectControlGroups=true
+ProtectClock=true
+ProtectHostname=true
+RestrictSUIDSGID=true
+RestrictRealtime=true
+RestrictNamespaces=true
+LockPersonality=true
+RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX
+CapabilityBoundingSet=
+AmbientCapabilities=
+SystemCallArchitectures=native
+# 不要加 MemoryDenyWriteExecute：V8 JIT 需要可写可执行内存
+
+[Install]
+WantedBy=multi-user.target

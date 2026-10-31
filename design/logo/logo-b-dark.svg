@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 424 112" width="424" height="112" role="img" aria-label="闪裳Live">
+  <title>闪裳Live</title>
+  <!-- B 图形标 + 字·深色背景版：字为白色，Live 用亮粉 -->
+  <defs>
+    <linearGradient id="b-grad" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="100" y2="90">
+      <stop offset="0" stop-color="#ff4fd8" />
+      <stop offset="1" stop-color="#6c8cff" />
+    </linearGradient>
+  </defs>
+  <g transform="translate(6 12)">
+    <path d="M60 2 L40 28 H54 L50 50 L70 20 H56 L66 2 Z" fill="url(#b-grad)" />
+    <path d="M50 50 L8 82 Q2 88 12 88 H88 Q98 88 92 82 Z" fill="none" stroke="url(#b-grad)" stroke-width="7" stroke-linejoin="round" />
+  </g>
+  <g transform="translate(124 20) scale(0.8)" fill="none" stroke="#ffffff" stroke-width="9" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M20 6 L30 16 M14 28 V96 M40 12 H86 V86 Q86 95 75 93 M54 32 C53 58 44 74 28 86 M56 54 C62 68 68 76 74 82" />
+    <path transform="translate(112 0)" d="M50 2 V13 M28 4 L33 12 M72 4 L67 12 M14 31 V21 H86 V31 M34 33 H66 V48 H34 Z M50 48 V63 M16 63 H84 M46 63 Q38 84 18 96 M74 70 L60 80 M50 74 Q64 90 86 96" />
+    <g transform="translate(230 0)" stroke="#ff4fd8">
+      <path d="M0 30 V96 H28 M44 54 V96 M58 54 L72 96 L86 54 M100 76 H134 Q134 54 117 54 Q100 54 100 75 Q100 96 118 96 Q128 96 133 89" />
+      <circle cx="44" cy="38" r="6" fill="#ff4fd8" stroke="none" />
+    </g>
+  </g>
+</svg>

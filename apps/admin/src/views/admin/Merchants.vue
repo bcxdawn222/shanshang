@@ -33,7 +33,7 @@
       <el-table-column label="注册时间" width="150">
         <template #default="{ row }">{{ fmtTime(row.createdAt) }}</template>
       </el-table-column>
-      <el-table-column label="操作" width="250" fixed="right">
+      <el-table-column label="操作" width="300" fixed="right">
         <template #default="{ row }">
           <template v-if="row.status === 'pending' || row.status === 'rejected'">
             <el-button link type="success" @click="approve(row)">通过</el-button>
@@ -41,6 +41,7 @@
           <el-button v-if="row.status === 'pending'" link type="danger" @click="reject(row)">驳回</el-button>
           <el-button v-if="row.status !== 'disabled'" link type="warning" @click="disable(row)">停用</el-button>
           <el-button v-else link type="primary" @click="act(row, 'enable', '已启用')">启用</el-button>
+          <el-button v-if="row.status === 'approved'" link type="primary" @click="addSlots(row)">加 5 格</el-button>
           <el-button link @click="resetPassword(row)">重置密码</el-button>
         </template>
       </el-table-column>
@@ -103,6 +104,22 @@ async function disable(row) {
     { type: 'warning' },
   ).catch(() => false);
   if (ok) await act(row, 'disable', '已停用');
+}
+
+async function addSlots(row) {
+  const ok = await ElMessageBox.confirm(
+    `给「${row.merchant.brandName}」增加 5 个服饰格（当前 ${row.merchant.slotQuota} 格）？`,
+    '加格',
+    { type: 'info' },
+  ).catch(() => false);
+  if (!ok) return;
+  try {
+    const { slots } = await api(`admin/merchants/${row.id}/add-slots`, { method: 'POST' });
+    ElMessage.success(`已加格，现在共 ${slots.quota} 格（已用 ${slots.used}）`);
+    await load();
+  } catch (e) {
+    ElMessage.error(e.message);
+  }
 }
 
 async function resetPassword(row) {
