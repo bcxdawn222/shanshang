@@ -63,15 +63,17 @@ export const LEDGER_TYPE_TAG = {
   REFUND: 'primary',
 };
 
-/** 快照状态（接口约定 Phase 5 §4）；作废（预约后未上传）也按 expired 返回 */
+/** 快照状态（接口约定 Phase 5 §4）；pending 为照片生成中（不可核销），作废（预约 10 分钟未上传）按 expired 返回 */
 export const SNAPSHOT_STATE_TEXT = {
   valid: '可核销',
+  pending: '生成中',
   redeemed: '已核销',
   expired: '已过期',
 };
 
 export const SNAPSHOT_STATE_TAG = {
   valid: 'success',
+  pending: 'primary',
   redeemed: 'info',
   expired: 'warning',
 };

@@ -28,6 +28,7 @@ const pageQuery = {
 const notFound = () => new HttpError(404, 'SNAPSHOT_NOT_FOUND', '快照不存在，请核对短码');
 const redeemedError = () => new HttpError(409, 'SNAPSHOT_REDEEMED', '该优惠已核销，不能重复核销');
 const expiredError = () => new HttpError(410, 'SNAPSHOT_EXPIRED', '该优惠已过期或已作废');
+const pendingError = () => new HttpError(409, 'SNAPSHOT_PENDING', '照片还在生成中，请稍后再查');
 
 /**
  * 商家核销（Phase 5 §4）：只能查、核自己服饰的快照，跨商家统一 404，不泄露是否存在。
@@ -79,6 +80,7 @@ export default async function merchantRedeemRoutes(app, { ctx }) {
       const state = publicState(r, t);
       if (state === 'redeemed') throw redeemedError();
       if (state === 'expired') throw expiredError();
+      if (state === 'pending') throw pendingError();
     };
     check(row);
     // 条件 UPDATE：并发核销时只有一个请求能改到行，另一个按最新状态报 409

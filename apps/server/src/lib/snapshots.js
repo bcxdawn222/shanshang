@@ -47,11 +47,14 @@ export function snapshotStatus(row, nowMs) {
   return 'valid';
 }
 
-/** 对外 state 只有 valid / redeemed / expired；上传中的快照不可核销，对外也算 expired */
+/** 对外 state：valid / pending（照片生成中，不可核销）/ redeemed / expired，与内部状态一致 */
 export function publicState(row, nowMs) {
-  const s = snapshotStatus(row, nowMs);
-  return s === 'pending' ? 'expired' : s;
+  return snapshotStatus(row, nowMs);
 }
+
+/** 生成中的条件（已预约、未上传、还在上传窗口内），参数 @now、@voidBefore */
+export const PENDING_SQL = `(s.redeemed_at IS NULL AND s.purged_at IS NULL AND s.expires_at > @now
+  AND s.image_key IS NULL AND s.created_at > @voidBefore)`;
 
 /** 图片是否还能访问：已上传、未清理、未过期（已核销但没过期的也能看） */
 export function imageAvailable(row, nowMs) {

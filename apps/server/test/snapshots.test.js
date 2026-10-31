@@ -95,9 +95,14 @@ test('快照主流程：预约→上传→快照页→lookup→核销→重复 4
   assert.equal(snap.expiresAt - s.h.db.prepare('SELECT created_at FROM snapshot WHERE id = ?').pluck().get(snap.id), 7 * DAY);
   const token = s.tokenOf(snap.url);
 
-  // 未上传时不可核销、页面显示生成中
-  assert.equal((await s.lookup(s.m1, { code: snap.code })).json().state, 'expired');
-  assert.equal((await s.redeem(s.m1, { code: snap.code })).statusCode, 410);
+  // 未上传时不可核销：商家查询显示生成中，核销 409 SNAPSHOT_PENDING
+  assert.equal((await s.lookup(s.m1, { code: snap.code })).json().state, 'pending');
+  const early = await s.redeem(s.m1, { code: snap.code });
+  assert.equal(early.statusCode, 409);
+  assert.equal(early.json().error.code, 'SNAPSHOT_PENDING');
+  const adminPending = await loginAdmin(s.h.app);
+  assert.equal((await s.inject('GET', '/api/admin/snapshots?state=pending', adminPending)).json().total, 1);
+  assert.equal((await s.inject('GET', '/api/admin/snapshots?state=expired', adminPending)).json().total, 0);
 
   const up = await s.upload(dev, snap.id);
   assert.equal(up.statusCode, 200, up.body);
