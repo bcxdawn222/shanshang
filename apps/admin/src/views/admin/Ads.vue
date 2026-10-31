@@ -240,8 +240,8 @@ onMounted(load);
 .preview {
   max-width: 360px;
   max-height: 200px;
-  border: 1px solid #ebeef5;
-  border-radius: 4px;
+  border: 1px solid var(--el-border-color-lighter);
+  border-radius: 8px;
   background: #000;
 }
 </style>

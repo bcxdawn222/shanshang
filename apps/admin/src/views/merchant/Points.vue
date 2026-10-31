@@ -172,8 +172,8 @@ onMounted(refresh);
   width: 180px;
   height: 180px;
   flex: none;
-  border: 1px solid #ebeef5;
-  border-radius: 4px;
+  border: 1px solid var(--el-border-color-lighter);
+  border-radius: 8px;
 }
 .pager {
   margin-top: 16px;

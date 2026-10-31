@@ -371,7 +371,7 @@ onMounted(() => {
 }
 .unit {
   margin-left: 10px;
-  color: #8a8f99;
+  color: var(--el-text-color-secondary);
   font-size: 13px;
 }
 .danger {
@@ -384,8 +384,8 @@ onMounted(() => {
   display: block;
   width: 180px;
   height: 180px;
-  border: 1px solid #ebeef5;
-  border-radius: 4px;
+  border: 1px solid var(--el-border-color-lighter);
+  border-radius: 8px;
 }
 .qr-ops {
   display: flex;

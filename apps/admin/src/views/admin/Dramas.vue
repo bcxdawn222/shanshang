@@ -259,8 +259,8 @@ onMounted(() => {
   width: 120px;
   height: 160px;
   object-fit: cover;
-  border: 1px solid #ebeef5;
-  border-radius: 4px;
+  border: 1px solid var(--el-border-color-lighter);
+  border-radius: 8px;
 }
 .opt {
   display: flex;
@@ -275,7 +275,7 @@ onMounted(() => {
 }
 .unit {
   margin-left: 10px;
-  color: #8a8f99;
+  color: var(--el-text-color-secondary);
   font-size: 13px;
 }
 </style>

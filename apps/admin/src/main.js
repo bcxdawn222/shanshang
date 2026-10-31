@@ -7,6 +7,8 @@ import { createApp } from 'vue';
 import App from './App.vue';
 import { router } from './router.js';
 import { loadPublicSettings } from './store.js';
+// 苹果毛玻璃主题：须在 Element Plus（含 dark css-vars）之后引入，才能覆盖其变量
+import './glass.css';
 import './style.css';
 
 loadPublicSettings();

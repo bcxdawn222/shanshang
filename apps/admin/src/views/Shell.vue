@@ -120,17 +120,23 @@ async function onLogout() {
 .shell {
   height: 100%;
 }
+/* 侧栏 / 顶栏是 el-main 的兄弟节点，可以加 backdrop-filter；
+   不要加在 .shell / el-main 上，否则 el-dialog 的 fixed 遮罩会被限制在里面 */
 .aside {
-  background: var(--el-bg-color);
-  border-right: 1px solid var(--el-border-color-lighter);
+  background: var(--glass-bg);
+  border-right: 1px solid var(--glass-edge);
+  box-shadow: 1px 0 0 var(--glass-border) inset;
+  -webkit-backdrop-filter: var(--glass-blur);
+  backdrop-filter: var(--glass-blur);
+  overflow-y: auto;
 }
 .aside-brand {
-  padding: 18px 16px 4px;
+  padding: 20px 18px 4px;
 }
 .role {
-  padding: 0 16px 12px 58px;
+  padding: 0 16px 10px 60px;
   font-size: 12px;
-  color: #8a8f99;
+  color: var(--el-text-color-secondary);
 }
 .menu {
   border-right: none;
@@ -139,17 +145,23 @@ async function onLogout() {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  background: var(--el-bg-color);
-  border-bottom: 1px solid var(--el-border-color-lighter);
+  height: 56px;
+  background: var(--glass-bg);
+  border-bottom: 1px solid var(--glass-edge);
+  -webkit-backdrop-filter: var(--glass-blur);
+  backdrop-filter: var(--glass-blur);
 }
 .title {
+  font-size: 15px;
   font-weight: 600;
+  color: var(--el-text-color-primary);
 }
 .user {
   display: flex;
   align-items: center;
   gap: 12px;
   font-size: 14px;
+  color: var(--el-text-color-regular);
 }
 /* 手机扫码核销时窄屏打开：收起侧栏，只留顶栏和内容 */
 @media (max-width: 768px) {

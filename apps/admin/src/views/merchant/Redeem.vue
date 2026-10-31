@@ -210,16 +210,16 @@ onMounted(loadRecords);
   width: 160px;
   height: 213px;
   flex: none;
-  border: 1px solid #ebeef5;
-  border-radius: 4px;
+  border: 1px solid var(--el-border-color-lighter);
+  border-radius: 10px;
 }
 .thumb.empty {
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #8a8f99;
+  color: var(--el-text-color-secondary);
   font-size: 13px;
-  background: #f5f6fa;
+  background: var(--el-fill-color-light);
 }
 .desc {
   flex: 1;

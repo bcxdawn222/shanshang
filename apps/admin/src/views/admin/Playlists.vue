@@ -345,7 +345,7 @@ onMounted(async () => {
 }
 .unit {
   margin-left: 6px;
-  color: #8a8f99;
+  color: var(--el-text-color-secondary);
   font-size: 13px;
 }
 .danger {

@@ -61,6 +61,6 @@ async function submit() {
   margin-top: 14px;
   text-align: center;
   font-size: 13px;
-  color: #888;
+  color: var(--el-text-color-secondary);
 }
 </style>

@@ -280,7 +280,7 @@ onUnmounted(() => clearInterval(timer));
   width: 100%;
   height: 180px;
   object-fit: cover;
-  background: #f0f2f5;
+  background: var(--el-fill-color-light);
 }
 .info {
   padding: 10px;
@@ -298,20 +298,20 @@ onUnmounted(() => clearInterval(timer));
 }
 .tags {
   font-size: 12px;
-  color: #606266;
+  color: var(--el-text-color-regular);
 }
 .countdown {
   font-size: 13px;
-  color: #e6a23c;
+  color: var(--el-color-warning);
 }
 .notice {
   font-size: 12px;
-  color: #8a8f99;
+  color: var(--el-text-color-secondary);
   line-height: 1.5;
   margin: 0;
 }
 .notice.danger {
-  color: #f56c6c;
+  color: var(--el-color-danger);
 }
 .ops {
   margin-top: 2px;
@@ -322,20 +322,22 @@ onUnmounted(() => clearInterval(timer));
   align-items: center;
   justify-content: center;
   gap: 8px;
-  border: 2px dashed #dcdfe6;
-  border-radius: 6px;
-  color: #909399;
+  border: 2px dashed var(--el-border-color);
+  border-radius: 16px;
+  color: var(--el-text-color-secondary);
   cursor: pointer;
-  background: #fff;
+  background: var(--glass-bg);
+  -webkit-backdrop-filter: var(--glass-blur);
+  backdrop-filter: var(--glass-blur);
 }
 .add:hover,
 .add:focus-visible {
-  border-color: #409eff;
-  color: #409eff;
+  border-color: var(--el-color-primary);
+  color: var(--el-color-primary);
   outline: none;
 }
 .add.locked {
-  background: #fafafa;
+  background: var(--el-fill-color-light);
 }
 .preview {
   display: block;

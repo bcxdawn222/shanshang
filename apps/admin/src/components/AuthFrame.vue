@@ -19,7 +19,7 @@ defineProps({ title: { type: String, required: true } });
 const bgStyle = computed(() =>
   store.settings.loginBgUrl
     ? { backgroundImage: `url("${encodeURI(store.settings.loginBgUrl)}")` }
-    : { backgroundImage: 'linear-gradient(135deg, #1b1035 0%, #3a1c71 45%, #0f4c75 100%)' },
+    : { backgroundImage: 'var(--glass-auth-bg)' },
 );
 </script>
 
@@ -29,27 +29,33 @@ const bgStyle = computed(() =>
   display: flex;
   align-items: center;
   justify-content: center;
+  background-color: var(--glass-page-color);
   background-size: cover;
   background-position: center;
   padding: 24px;
   box-sizing: border-box;
 }
+/* 居中毛玻璃卡片；背景图任意深浅都要可读，所以比普通卡片更不透明 */
 .card {
   width: 100%;
   max-width: 380px;
-  background: rgba(255, 255, 255, 0.96);
-  border-radius: 12px;
-  padding: 28px 28px 20px;
-  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.25);
+  background: var(--glass-bg-strong);
+  border: 1px solid var(--glass-border);
+  border-radius: 20px;
+  padding: 32px 30px 22px;
+  box-shadow: var(--glass-shadow-pop);
+  -webkit-backdrop-filter: var(--glass-blur-strong);
+  backdrop-filter: var(--glass-blur-strong);
+  box-sizing: border-box;
 }
 .head {
   justify-content: center;
 }
 h1 {
-  font-size: 16px;
-  font-weight: 500;
+  font-size: 17px;
+  font-weight: 600;
   text-align: center;
-  color: #555;
-  margin: 12px 0 20px;
+  color: var(--el-text-color-primary);
+  margin: 14px 0 22px;
 }
 </style>

@@ -97,6 +97,6 @@ onMounted(load);
 
 <style scoped>
 :deep(.row-removed) {
-  color: #a8abb2;
+  color: var(--el-text-color-placeholder);
 }
 </style>
