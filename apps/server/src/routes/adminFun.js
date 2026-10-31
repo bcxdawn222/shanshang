@@ -1,14 +1,21 @@
 import { writeAudit } from '../lib/audit.js';
 import {
+  FORTUNE_LIST_MAX,
+  FORTUNE_SLOTS,
+  FORTUNE_TIERS,
   FUN_KEYS,
   LABEL_MAX,
+  LUCKY_COLOR_MAX,
   OPTION_MAX,
+  SLOT_WORD_MAX,
+  TEMPLATE_MAX,
   WEIGHT_KINDS,
   WEIGHT_MAX,
   WHEEL_MAX_CELLS,
   WHEEL_MIN_CELLS,
   ZODIAC_KEYS,
   getFun,
+  normalizeFortune,
   normalizeOptions,
   normalizeWheel,
   resetFun,
@@ -65,6 +72,45 @@ const optionsBody = {
   },
 };
 
+const strList = (maxLength) => ({
+  type: 'array',
+  minItems: 1,
+  maxItems: FORTUNE_LIST_MAX,
+  items: { type: 'string', minLength: 1, maxLength },
+});
+
+// 运势文案库：三档模板、五类词槽、幸运色都要给，整体替换
+const fortuneBody = {
+  type: 'object',
+  required: ['templates', 'slots', 'luckyColors'],
+  additionalProperties: false,
+  properties: {
+    templates: {
+      type: 'object',
+      required: FORTUNE_TIERS,
+      additionalProperties: false,
+      properties: Object.fromEntries(FORTUNE_TIERS.map((k) => [k, strList(TEMPLATE_MAX)])),
+    },
+    slots: {
+      type: 'object',
+      required: FORTUNE_SLOTS,
+      additionalProperties: false,
+      properties: Object.fromEntries(FORTUNE_SLOTS.map((k) => [k, strList(SLOT_WORD_MAX)])),
+    },
+    luckyColors: {
+      type: 'array',
+      minItems: 1,
+      maxItems: LUCKY_COLOR_MAX,
+      items: {
+        type: 'object',
+        required: ['label', 'color'],
+        additionalProperties: false,
+        properties: { label, color: tagName },
+      },
+    },
+  },
+};
+
 const SECTIONS = [
   {
     path: 'zodiac-wheel',
@@ -81,6 +127,18 @@ const SECTIONS = [
     body: optionsBody,
     normalize: normalizeOptions,
     summary: (v) => ({ occasions: v.occasions.length, feelings: v.feelings.length }),
+  },
+  {
+    path: 'fortune-library',
+    field: 'fortuneLibrary',
+    action: 'fun.fortune',
+    body: fortuneBody,
+    normalize: normalizeFortune,
+    summary: (v) => ({
+      templates: Object.values(v.templates).reduce((n, l) => n + l.length, 0),
+      words: Object.values(v.slots).reduce((n, l) => n + l.length, 0),
+      luckyColors: v.luckyColors.length,
+    }),
   },
 ];
 

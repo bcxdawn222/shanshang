@@ -131,3 +131,56 @@ export function normalizeOptions(db, body) {
   }
   return out;
 }
+
+// 运势文案库（ADM-07）：与 packages/shared/src/fortune.js 的 DEFAULT_FORTUNE_LIBRARY 形状一致
+export const FORTUNE_TIERS = ['high', 'mid', 'low'];
+export const FORTUNE_SLOTS = ['opener', 'energy', 'mood', 'action', 'advice'];
+export const FORTUNE_BUILTINS = ['zodiac', 'color'];
+export const FORTUNE_LIST_MAX = 30;
+export const TEMPLATE_MAX = 80;
+export const SLOT_WORD_MAX = 20;
+export const LUCKY_COLOR_MAX = 12;
+
+const TIER_TEXT = { high: '高分档模板', mid: '中分档模板', low: '低分档模板' };
+const SLOT_TEXT = { opener: '开场词', energy: '能量词', mood: '情绪词', action: '行动词', advice: '建议词' };
+
+/** 去空格、非空、组内不重复 */
+function cleanList(list, where) {
+  const seen = new Set();
+  return list.map((raw, i) => {
+    const s = raw.trim();
+    if (!s) throw bad('BAD_REQUEST', `${where}第 ${i + 1} 项：不能为空`);
+    if (seen.has(s)) throw bad('BAD_REQUEST', `${where}第 ${i + 1} 项：「${s}」重复`);
+    seen.add(s);
+    return s;
+  });
+}
+
+/** 校验并规整运势文案库（结构、长度、数量已由 JSON schema 校验）：占位符只能是内置或词槽键，幸运色必须在字典里 */
+export function normalizeFortune(db, body) {
+  const allowed = new Set([...FORTUNE_BUILTINS, ...FORTUNE_SLOTS]);
+  const templates = {};
+  for (const tier of FORTUNE_TIERS) {
+    templates[tier] = cleanList(body.templates[tier], TIER_TEXT[tier]);
+    templates[tier].forEach((t, i) => {
+      for (const [, name] of t.matchAll(/\{([^{}]*)\}/g)) {
+        if (!allowed.has(name)) throw bad('BAD_REQUEST', `${TIER_TEXT[tier]}第 ${i + 1} 项：未知占位符「{${name}}」`);
+      }
+    });
+  }
+  const slots = {};
+  for (const slot of FORTUNE_SLOTS) slots[slot] = cleanList(body.slots[slot], SLOT_TEXT[slot]);
+
+  const colors = dictNames(db).color;
+  const labels = new Set();
+  const luckyColors = body.luckyColors.map((c, i) => {
+    const where = `幸运色第 ${i + 1} 项`;
+    const label = c.label.trim();
+    if (!label) throw bad('BAD_REQUEST', `${where}：名称不能为空`);
+    if (labels.has(label)) throw bad('BAD_REQUEST', `${where}：名称「${label}」重复`);
+    labels.add(label);
+    if (!colors.has(c.color)) throw bad('UNKNOWN_TAG', `${where}：主色「${c.color}」不在标签字典里`);
+    return { label, color: c.color };
+  });
+  return { templates, slots, luckyColors };
+}
