@@ -10,24 +10,29 @@
         </el-menu-item>
       </el-menu>
     </el-aside>
-    <el-container>
-      <el-header class="header">
-        <span class="title">{{ route.meta.title }}</span>
-        <div class="user">
-          <!-- SET-04：商家后台黑 / 白主题，只影响后台自身 -->
-          <el-switch
-            v-if="!isAdmin"
-            :model-value="merchantTheme === 'dark'"
-            inline-prompt
-            :active-icon="Moon"
-            :inactive-icon="Sunny"
-            aria-label="切换黑 / 白主题"
-            @change="(v) => setMerchantTheme(v ? 'dark' : 'light')"
-          />
-          <span>{{ store.account?.nickname || store.account?.username }}</span>
-          <el-button link type="primary" @click="onLogout">退出</el-button>
-        </div>
-      </el-header>
+    <!-- 顶栏换成 GlassNavbar 后 el-container 识别不到 ElHeader，需显式 vertical -->
+    <el-container direction="vertical">
+      <GlassNavbar class="header">
+        <template #brand>
+          <span class="title">{{ route.meta.title }}</span>
+        </template>
+        <template #right>
+          <div class="user">
+            <!-- SET-04：商家后台黑 / 白主题，只影响后台自身 -->
+            <el-switch
+              v-if="!isAdmin"
+              :model-value="merchantTheme === 'dark'"
+              inline-prompt
+              :active-icon="Moon"
+              :inactive-icon="Sunny"
+              aria-label="切换黑 / 白主题"
+              @change="(v) => setMerchantTheme(v ? 'dark' : 'light')"
+            />
+            <span>{{ store.account?.nickname || store.account?.username }}</span>
+            <el-button link type="primary" @click="onLogout">退出</el-button>
+          </div>
+        </template>
+      </GlassNavbar>
       <el-main>
         <router-view />
       </el-main>
@@ -65,6 +70,7 @@ import {
 import { computed, watchEffect } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import Brand from '../components/Brand.vue';
+import { GlassNavbar } from '../components/glass/index.js';
 import { logout, store } from '../store.js';
 import { applyTheme, merchantTheme, setMerchantTheme } from '../theme.js';
 
@@ -141,15 +147,10 @@ async function onLogout() {
 .menu {
   border-right: none;
 }
+/* 玻璃面 / 吸顶 / 高度由 GlassNavbar 负责；它是 el-main 的兄弟节点，可以带 backdrop-filter */
 .header {
-  display: flex;
-  align-items: center;
+  flex-shrink: 0;
   justify-content: space-between;
-  height: 56px;
-  background: var(--glass-bg);
-  border-bottom: 1px solid var(--glass-edge);
-  -webkit-backdrop-filter: var(--glass-blur);
-  backdrop-filter: var(--glass-blur);
 }
 .title {
   font-size: 15px;
