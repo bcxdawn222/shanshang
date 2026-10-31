@@ -46,12 +46,19 @@ for app in admin device; do
     echo "apps/$app/dist/index.html 不存在，构建失败" >&2
     exit 1
   fi
-  # 构建后自检：入口脚本必须挂在 base 下，否则部署后白屏
+  # 构建后自检：入口 html 里所有以 / 开头的 src/href（脚本、CSS、favicon、modulepreload）都必须挂在 base 下，
+  # 且入口脚本存在；动态 import 的 chunk 由 vite 按 base 生成，再查一遍 JS 里不能出现被改写的路径
   base_var="$(echo "$app" | tr '[:lower:]' '[:upper:]')_BASE"
   base="${!base_var}"
-  if ! grep -q "src=\"${base}assets/" "apps/$app/dist/index.html"; then
-    echo "apps/$app/dist/index.html 的资源路径不以 $base 开头：" >&2
-    grep -o 'src="[^"]*"' "apps/$app/dist/index.html" >&2 || true
+  html="apps/$app/dist/index.html"
+  bad="$(grep -oE '(src|href)="/[^"]*"' "$html" | grep -v "=\"${base}" || true)"
+  if [[ -n "$bad" ]] || ! grep -q "src=\"${base}assets/" "$html"; then
+    echo "$html 的资源路径不以 $base 开头：" >&2
+    echo "${bad:-（缺少 ${base}assets/ 入口脚本）}" >&2
+    exit 1
+  fi
+  if grep -rlq 'Program Files' "apps/$app/dist/assets/"; then
+    echo "apps/$app/dist/assets 里出现 Windows 路径（Git Bash 路径转换未关闭）" >&2
     exit 1
   fi
 done
