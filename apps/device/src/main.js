@@ -10,6 +10,7 @@ import { flushSegments } from './segments.js';
 import { flushEvents } from './events.js';
 import { homeEntry } from './views/home.js';
 import { isPlayerActive, playerEntry } from './views/player.js';
+import { isTryonActive } from './views/tryon.js';
 
 const POLL_MS = 5000; // 未绑定时轮询绑定状态
 const BOUND_POLL_MS = 60_000; // 已绑定后低频确认没被停用
@@ -76,7 +77,8 @@ function startRefresh() {
 // ───────── 空闲：无操作进入待机播放；试穿页的 cleanup 负责 disconnect + 结算离屏 ─────────
 
 function goIdle() {
-  if (mode !== 'bound' || isPlayerActive()) return;
+  // 试穿中不进待机：由试穿时长上限的“点击继续”结束，避免 4 分钟空闲抢在 5 分钟上限之前
+  if (mode !== 'bound' || isPlayerActive() || isTryonActive()) return;
   router.reset(homeEntry);
   router.push(playerEntry);
 }

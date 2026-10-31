@@ -24,6 +24,10 @@ const LIMIT_CONFIRM_SECONDS = 15; // 试穿到上限后“点击继续”的等�
 
 const kiosk = () => window.MagicMirrorKiosk;
 
+// 试穿页在屏时不进待机：顾客站在镜头前不碰屏幕是常态，由试穿时长上限（“点击继续”）兜底结束
+let tryonActive = false;
+export const isTryonActive = () => tryonActive;
+
 function reportBusy(busy) {
   try {
     kiosk()?.setUpdateInstallIdle?.(!busy);
@@ -381,6 +385,7 @@ export function tryonEntry(items, garmentId) {
       function teardown({ keepalive = false } = {}) {
         if (disposed) return;
         disposed = true;
+        tryonActive = false;
         snap.dispose(); // 关闭确认层 / 二维码层并清掉倒计时
         clearTimeout(retryTimer);
         clearTimeout(limitTimer);
@@ -394,6 +399,7 @@ export function tryonEntry(items, garmentId) {
         reportBusy(false);
       }
 
+      tryonActive = true;
       updateBadge();
       renderRail();
       armLimit();
