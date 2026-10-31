@@ -1243,3 +1243,56 @@ body.theme-black .player {
     background: rgba(0, 0, 0, 0.8);
   }
 }
+
+/* ───────── 星座轮盘 Canvas 配色（zodiac.js 通过 getComputedStyle 读取，主题切换后下一帧重绘生效） ───────── */
+body.theme-black {
+  --wheel-base: #1a1a24;
+  --wheel-seg-alpha: 0.72;
+  --wheel-seg-soften: 0.12;
+  --wheel-seg-line: rgba(255, 255, 255, 0.28);
+  --wheel-gloss: rgba(255, 255, 255, 0.18);
+  --wheel-rim: rgba(255, 255, 255, 0.08);
+  --wheel-rim-stroke: rgba(255, 255, 255, 0.55);
+  --wheel-rim-edge: rgba(0, 0, 0, 0.35);
+  --wheel-peg: rgba(255, 255, 255, 0.92);
+  --wheel-peg-stroke: rgba(0, 0, 0, 0.25);
+  --wheel-text-light: #ffffff;
+  --wheel-text-dark: #1c1c1e;
+  --wheel-halo-light: rgba(255, 255, 255, 0.6);
+  --wheel-halo-dark: rgba(0, 0, 0, 0.45);
+  --wheel-hub-1: #ff4fd8;
+  --wheel-hub-2: #7b5cff;
+  --wheel-hub-3: #6c8cff;
+  --wheel-hub-stroke: rgba(255, 255, 255, 0.85);
+  --wheel-pointer: #0a84ff;
+  --wheel-pointer-deep: #0071e3;
+  --wheel-pointer-stroke: #ffffff;
+  --wheel-pointer-cap: #ffffff;
+  --wheel-shadow: rgba(0, 0, 0, 0.45);
+}
+
+body.theme-white {
+  --wheel-base: #f6f6fa;
+  --wheel-seg-alpha: 0.82;
+  --wheel-seg-soften: 0.16;
+  --wheel-seg-line: rgba(255, 255, 255, 0.7);
+  --wheel-gloss: rgba(255, 255, 255, 0.38);
+  --wheel-rim: rgba(255, 255, 255, 0.5);
+  --wheel-rim-stroke: rgba(255, 255, 255, 0.95);
+  --wheel-rim-edge: rgba(60, 60, 110, 0.22);
+  --wheel-peg: #ffffff;
+  --wheel-peg-stroke: rgba(60, 60, 110, 0.3);
+  --wheel-text-light: #ffffff;
+  --wheel-text-dark: #1c1c1e;
+  --wheel-halo-light: rgba(255, 255, 255, 0.7);
+  --wheel-halo-dark: rgba(0, 0, 0, 0.42);
+  --wheel-hub-1: #ff4fd8;
+  --wheel-hub-2: #7b5cff;
+  --wheel-hub-3: #6c8cff;
+  --wheel-hub-stroke: #ffffff;
+  --wheel-pointer: #0a84ff;
+  --wheel-pointer-deep: #0071e3;
+  --wheel-pointer-stroke: #ffffff;
+  --wheel-pointer-cap: #ffffff;
+  --wheel-shadow: rgba(60, 60, 110, 0.3);
+}

@@ -59,11 +59,89 @@ function pickGender(nav, zodiac) {
   });
 }
 
-function luminance(hex) {
+// ───── 转盘配色：从 style.css 的 --wheel-* 读取，按 body.className 缓存，主题切换后下一帧重绘即生效 ─────
+const WHEEL_FALLBACK = {
+  '--wheel-base': '#1b1b2a',
+  '--wheel-seg-alpha': '0.72',
+  '--wheel-seg-soften': '0.12',
+  '--wheel-seg-line': 'rgba(255,255,255,0.28)',
+  '--wheel-gloss': 'rgba(255,255,255,0.18)',
+  '--wheel-rim': 'rgba(255,255,255,0.08)',
+  '--wheel-rim-stroke': 'rgba(255,255,255,0.55)',
+  '--wheel-rim-edge': 'rgba(0,0,0,0.35)',
+  '--wheel-peg': 'rgba(255,255,255,0.92)',
+  '--wheel-peg-stroke': 'rgba(0,0,0,0.25)',
+  '--wheel-text-light': '#ffffff',
+  '--wheel-text-dark': '#1c1c1e',
+  '--wheel-halo-light': 'rgba(255,255,255,0.6)',
+  '--wheel-halo-dark': 'rgba(0,0,0,0.45)',
+  '--wheel-hub-1': '#ff4fd8',
+  '--wheel-hub-2': '#7b5cff',
+  '--wheel-hub-3': '#6c8cff',
+  '--wheel-hub-stroke': 'rgba(255,255,255,0.85)',
+  '--wheel-pointer': '#0a84ff',
+  '--wheel-pointer-deep': '#0071e3',
+  '--wheel-pointer-stroke': '#ffffff',
+  '--wheel-pointer-cap': '#ffffff',
+  '--wheel-shadow': 'rgba(0,0,0,0.45)',
+};
+let wheelThemeCache = null;
+function wheelTheme() {
+  const key = document.body.className;
+  if (wheelThemeCache && wheelThemeCache.key === key) return wheelThemeCache;
+  const cs = getComputedStyle(document.body);
+  const v = (name) => cs.getPropertyValue(name).trim() || WHEEL_FALLBACK[name];
+  const num = (name) => {
+    const x = parseFloat(v(name));
+    return Number.isFinite(x) ? x : parseFloat(WHEEL_FALLBACK[name]);
+  };
+  wheelThemeCache = {
+    key,
+    base: hexRgb(v('--wheel-base')) || hexRgb(WHEEL_FALLBACK['--wheel-base']),
+    segAlpha: Math.min(1, Math.max(0, num('--wheel-seg-alpha'))),
+    soften: Math.min(1, Math.max(0, num('--wheel-seg-soften'))),
+    segLine: v('--wheel-seg-line'),
+    gloss: v('--wheel-gloss'),
+    rim: v('--wheel-rim'),
+    rimStroke: v('--wheel-rim-stroke'),
+    rimEdge: v('--wheel-rim-edge'),
+    peg: v('--wheel-peg'),
+    pegStroke: v('--wheel-peg-stroke'),
+    textLight: v('--wheel-text-light'),
+    textDark: v('--wheel-text-dark'),
+    haloLight: v('--wheel-halo-light'),
+    haloDark: v('--wheel-halo-dark'),
+    hub: [v('--wheel-hub-1'), v('--wheel-hub-2'), v('--wheel-hub-3')],
+    hubStroke: v('--wheel-hub-stroke'),
+    pointer: v('--wheel-pointer'),
+    pointerDeep: v('--wheel-pointer-deep'),
+    pointerStroke: v('--wheel-pointer-stroke'),
+    pointerCap: v('--wheel-pointer-cap'),
+    shadow: v('--wheel-shadow'),
+  };
+  return wheelThemeCache;
+}
+
+function hexRgb(hex) {
   const m = /^#?([0-9a-f]{6})$/i.exec(hex || '');
-  if (!m) return 0;
-  const v = parseInt(m[1], 16);
-  return (0.299 * (v >> 16) + 0.587 * ((v >> 8) & 255) + 0.114 * (v & 255)) / 255;
+  if (!m) return null;
+  const x = parseInt(m[1], 16);
+  return [x >> 16, (x >> 8) & 255, x & 255];
+}
+
+const mix = (a, b, t) => a.map((c, i) => Math.round(c + (b[i] - c) * t));
+const luma = (rgb) => (0.299 * rgb[0] + 0.587 * rgb[1] + 0.114 * rgb[2]) / 255;
+
+// 扇区：原色向白色柔化后半透明叠在玻璃底上；按估算的实际显示色选文字颜色和反色描边
+function softSegment(hex, t) {
+  const soft = mix(hexRgb(hex) || hexRgb('#6c8cff'), [255, 255, 255], t.soften);
+  const shown = mix(t.base, soft, t.segAlpha);
+  const lightBg = luma(shown) > 0.6;
+  return {
+    fill: `rgba(${soft[0]},${soft[1]},${soft[2]},${t.segAlpha})`,
+    text: lightBg ? t.textDark : t.textLight,
+    halo: lightBg ? t.haloLight : t.haloDark,
+  };
 }
 
 function wheelEntry(zodiac, gender) {
@@ -94,6 +172,8 @@ function wheelEntry(zodiac, gender) {
     let dragSpeed = 0;
     let dragDir = 1;
     let disposed = false;
+    // 扇区配色按主题缓存，主题切换（body.className 变化）后重算
+    let segCache = { key: null, list: [] };
 
     function draw() {
       if (!size) return;
@@ -101,56 +181,102 @@ function wheelEntry(zodiac, gender) {
       const R = r * 0.84;
       const rim = R * 0.07;
       const seg = TAU / n;
-      const light = document.body.classList.contains('theme-white');
+      const t = wheelTheme();
+      if (segCache.key !== t.key) segCache = { key: t.key, list: fills.map((f) => softSegment(f, t)) };
+      const segs = segCache.list;
+      const hair = Math.max(1, R * 0.006);
+      const fontPx = Math.round(R * (n > 10 ? 0.085 : 0.1));
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
       ctx.clearRect(0, 0, size, size);
       ctx.save();
       ctx.translate(r, r);
-      // 外圈
+      // 外圈：半透明玻璃环（只填环，不压在扇区下面，避免改变扇区显示色）
       ctx.beginPath();
       ctx.arc(0, 0, R + rim, 0, TAU);
-      ctx.fillStyle = light ? '#16182a' : '#2b2d45';
+      ctx.arc(0, 0, R, 0, TAU, true);
+      ctx.fillStyle = t.rim;
       ctx.fill();
+      ctx.save();
       ctx.rotate(state.rotation);
+      ctx.lineJoin = 'round';
       for (let i = 0; i < n; i += 1) {
         const a0 = -Math.PI / 2 + i * seg;
         ctx.beginPath();
         ctx.moveTo(0, 0);
         ctx.arc(0, 0, R, a0, a0 + seg);
         ctx.closePath();
-        ctx.fillStyle = fills[i];
+        ctx.fillStyle = segs[i].fill;
         ctx.fill();
-        ctx.strokeStyle = 'rgba(0,0,0,0.18)';
-        ctx.lineWidth = Math.max(1, R * 0.006);
+        ctx.strokeStyle = t.segLine;
+        ctx.lineWidth = hair;
         ctx.stroke();
-        // 文字沿半径方向
+        // 文字沿半径方向：先描一圈反色光晕再填字，保证在半透明底上可读
         ctx.save();
         ctx.rotate(a0 + seg / 2);
-        ctx.fillStyle = luminance(fills[i]) > 0.62 ? '#1d1f30' : '#ffffff';
-        ctx.font = `700 ${Math.round(R * (n > 10 ? 0.085 : 0.1))}px 'PingFang SC','Microsoft YaHei',sans-serif`;
+        ctx.font = `700 ${fontPx}px 'PingFang SC','Microsoft YaHei',sans-serif`;
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
+        ctx.lineWidth = Math.max(2, fontPx * 0.2);
+        ctx.strokeStyle = segs[i].halo;
+        ctx.strokeText(cells[i].label, R * 0.6, 0, R * 0.56);
+        ctx.fillStyle = segs[i].text;
         ctx.fillText(cells[i].label, R * 0.6, 0, R * 0.56);
         ctx.restore();
         // 格间拨钉
         ctx.beginPath();
-        ctx.arc(Math.cos(a0) * (R + rim / 2), Math.sin(a0) * (R + rim / 2), rim * 0.32, 0, TAU);
-        ctx.fillStyle = '#f5d76e';
+        ctx.arc(Math.cos(a0) * (R + rim / 2), Math.sin(a0) * (R + rim / 2), rim * 0.3, 0, TAU);
+        ctx.fillStyle = t.peg;
         ctx.fill();
+        ctx.lineWidth = Math.max(1, rim * 0.08);
+        ctx.strokeStyle = t.pegStroke;
+        ctx.stroke();
       }
       ctx.restore();
-      // 轮毂
+      // 高光：不随转盘旋转，上半部一层由亮到透明的光泽
+      ctx.save();
       ctx.beginPath();
-      ctx.arc(r, r, R * 0.14, 0, TAU);
-      const hub = ctx.createLinearGradient(r - R * 0.14, r, r + R * 0.14, r);
-      hub.addColorStop(0, '#ff4fd8');
-      hub.addColorStop(1, '#6c8cff');
-      ctx.fillStyle = hub;
-      ctx.fill();
-      ctx.lineWidth = R * 0.02;
-      ctx.strokeStyle = '#ffffff';
+      ctx.arc(0, 0, R, 0, TAU);
+      ctx.clip();
+      const gloss = ctx.createLinearGradient(0, -R, 0, R * 0.15);
+      gloss.addColorStop(0, t.gloss);
+      gloss.addColorStop(1, 'rgba(255,255,255,0)');
+      ctx.fillStyle = gloss;
+      ctx.fillRect(-R, -R, R * 2, R * 1.15);
+      ctx.restore();
+      // 玻璃边：外沿上亮下暗的半透明白描边，内沿一道细线
+      const edge = ctx.createLinearGradient(0, -R - rim, 0, R + rim);
+      edge.addColorStop(0, t.rimStroke);
+      edge.addColorStop(1, t.rimEdge);
+      ctx.beginPath();
+      ctx.arc(0, 0, R + rim - hair, 0, TAU);
+      ctx.lineWidth = Math.max(1.5, R * 0.01);
+      ctx.strokeStyle = edge;
       ctx.stroke();
-      // 指针拨片：枢轴在顶部，绕枢轴摆动
+      ctx.beginPath();
+      ctx.arc(0, 0, R, 0, TAU);
+      ctx.lineWidth = hair;
+      ctx.strokeStyle = t.rimEdge;
+      ctx.stroke();
+      ctx.restore();
+      // 轮毂：品牌光斑渐变 + 半透明白边
+      const hubR = R * 0.14;
+      ctx.save();
+      ctx.beginPath();
+      ctx.arc(r, r, hubR, 0, TAU);
+      const hub = ctx.createLinearGradient(r - hubR, r - hubR, r + hubR, r + hubR);
+      hub.addColorStop(0, t.hub[0]);
+      hub.addColorStop(0.55, t.hub[1]);
+      hub.addColorStop(1, t.hub[2]);
+      ctx.fillStyle = hub;
+      ctx.shadowColor = t.shadow;
+      ctx.shadowBlur = R * 0.04;
+      ctx.fill();
+      ctx.shadowBlur = 0;
+      ctx.lineWidth = R * 0.02;
+      ctx.strokeStyle = t.hubStroke;
+      ctx.stroke();
+      ctx.restore();
+      // 指针拨片：枢轴在顶部，绕枢轴摆动；主色渐变 + 白描边 + 轻阴影
       const pivotY = r - R - rim * 1.6;
       const len = rim * 1.6 + R * 0.12;
       const w = R * 0.07;
@@ -162,15 +288,27 @@ function wheelEntry(zodiac, gender) {
       ctx.lineTo(w, 0);
       ctx.lineTo(0, len);
       ctx.closePath();
-      ctx.fillStyle = '#ff4fd8';
-      ctx.shadowColor = 'rgba(0,0,0,0.35)';
+      const ptr = ctx.createLinearGradient(0, 0, 0, len);
+      ptr.addColorStop(0, t.pointer);
+      ptr.addColorStop(1, t.pointerDeep);
+      ctx.fillStyle = ptr;
+      ctx.shadowColor = t.shadow;
       ctx.shadowBlur = R * 0.03;
+      ctx.shadowOffsetY = R * 0.008;
       ctx.fill();
       ctx.shadowBlur = 0;
+      ctx.shadowOffsetY = 0;
+      ctx.lineJoin = 'round';
+      ctx.lineWidth = Math.max(1.5, R * 0.012);
+      ctx.strokeStyle = t.pointerStroke;
+      ctx.stroke();
       ctx.beginPath();
       ctx.arc(0, 0, w * 0.9, 0, TAU);
-      ctx.fillStyle = light ? '#16182a' : '#ffffff';
+      ctx.fillStyle = t.pointerCap;
       ctx.fill();
+      ctx.lineWidth = Math.max(1.5, R * 0.012);
+      ctx.strokeStyle = t.pointer;
+      ctx.stroke();
       ctx.restore();
     }
 
