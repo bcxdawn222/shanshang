@@ -34,12 +34,24 @@ fi
 
 export ADMIN_BASE="${ADMIN_BASE:-/sl/admin/}"
 export DEVICE_BASE="${DEVICE_BASE:-/sl/device/}"
+# Windows Git Bash 会把以 / 开头的环境变量改写成 Windows 路径（/sl/admin/ → /Program Files/Git/sl/admin/），
+# 传给 node 后 vite base 错误、线上白屏。关闭这层转换；Linux 上这两个变量无影响
+export MSYS_NO_PATHCONV=1
+export MSYS2_ENV_CONV_EXCL='*'
 
 for app in admin device; do
   echo "==> 构建 apps/$app"
   (cd "apps/$app" && npm ci && npm run build)
   if [[ ! -f "apps/$app/dist/index.html" ]]; then
     echo "apps/$app/dist/index.html 不存在，构建失败" >&2
+    exit 1
+  fi
+  # 构建后自检：入口脚本必须挂在 base 下，否则部署后白屏
+  base_var="$(echo "$app" | tr '[:lower:]' '[:upper:]')_BASE"
+  base="${!base_var}"
+  if ! grep -q "src=\"${base}assets/" "apps/$app/dist/index.html"; then
+    echo "apps/$app/dist/index.html 的资源路径不以 $base 开头：" >&2
+    grep -o 'src="[^"]*"' "apps/$app/dist/index.html" >&2 || true
     exit 1
   fi
 done
