@@ -61,6 +61,7 @@ const ACTION_TEXT = {
   'snapshot.redeem': '核销快照',
   'fun.zodiac': '修改星座轮盘映射',
   'fun.recommend': '修改 AI 推荐选项',
+  'fun.fortune': '修改运势文案库',
   'stats.export': '导出数据统计',
   'feedback.create': '提交留言',
   'feedback.reply': '回复留言',

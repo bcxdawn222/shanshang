@@ -90,6 +90,75 @@
           </el-table>
         </div>
       </el-tab-pane>
+
+      <!-- ---------- 运势文案库 ---------- -->
+      <el-tab-pane label="运势文案库" name="fortune">
+        <div class="page-head">
+          <span class="muted">
+            按综合星级分档选模板，再填词槽。{zodiac}、{color} 由程序填入星座和幸运色，其余占位符取自同名词槽。
+            <el-tag :type="fortuneState.configured ? 'success' : 'info'" size="small">{{ fortuneState.configured ? '自定义' : '使用默认值' }}</el-tag>
+          </span>
+          <div>
+            <el-button :disabled="!fortuneState.configured" :loading="busy === 'fortune-reset'" @click="reset('fortune')">恢复默认</el-button>
+            <el-button type="primary" :loading="busy === 'fortune'" @click="saveFortune">保存</el-button>
+          </div>
+        </div>
+        <div v-loading="loading">
+          <div class="group">
+            <h3>模板句（每档 1~{{ FORTUNE_LIST_MAX }} 条，每条 {{ TEMPLATE_MAX }} 字以内）</h3>
+            <p class="muted">可用占位符：{{ placeholderText }}</p>
+            <div v-for="(tText, tier) in TIERS" :key="tier" class="list-block">
+              <div class="list-title">{{ tText }}（{{ fortune.templates[tier].length }}）</div>
+              <div v-for="(_, i) in fortune.templates[tier]" :key="i" class="list-row">
+                <el-input v-model="fortune.templates[tier][i]" :maxlength="TEMPLATE_MAX" show-word-limit :aria-label="`${tText}第 ${i + 1} 条`" style="max-width: 640px" />
+                <el-button link type="danger" :disabled="fortune.templates[tier].length <= 1" @click="fortune.templates[tier].splice(i, 1)">删除</el-button>
+              </div>
+              <el-button size="small" :disabled="fortune.templates[tier].length >= FORTUNE_LIST_MAX" @click="fortune.templates[tier].push('')">新增模板</el-button>
+            </div>
+          </div>
+
+          <div class="group">
+            <h3>词槽（每类 1~{{ FORTUNE_LIST_MAX }} 项，每项 {{ SLOT_WORD_MAX }} 字以内）</h3>
+            <div v-for="(sText, slot) in SLOTS" :key="slot" class="list-block">
+              <div class="list-title">{{ sText }} <code>{{ ph(slot) }}</code>（{{ fortune.slots[slot].length }}）</div>
+              <div class="words">
+                <div v-for="(_, i) in fortune.slots[slot]" :key="i" class="word">
+                  <el-input v-model="fortune.slots[slot][i]" :maxlength="SLOT_WORD_MAX" :aria-label="`${sText}第 ${i + 1} 项`" style="width: 180px" />
+                  <el-button link type="danger" :disabled="fortune.slots[slot].length <= 1" :aria-label="`删除${sText}第 ${i + 1} 项`" @click="fortune.slots[slot].splice(i, 1)">×</el-button>
+                </div>
+                <el-button size="small" :disabled="fortune.slots[slot].length >= FORTUNE_LIST_MAX" @click="fortune.slots[slot].push('')">新增</el-button>
+              </div>
+            </div>
+          </div>
+
+          <div class="group">
+            <h3>幸运色（{{ fortune.luckyColors.length }}/{{ LUCKY_COLOR_MAX }}）</h3>
+            <el-table :data="fortune.luckyColors" border empty-text="至少保留一项" style="max-width: 600px">
+              <el-table-column label="#" width="50" align="center">
+                <template #default="{ $index }">{{ $index + 1 }}</template>
+              </el-table-column>
+              <el-table-column label="显示名称" min-width="160">
+                <template #default="{ row }">
+                  <el-input v-model="row.label" :maxlength="LABEL_MAX" placeholder="如：薄荷绿" aria-label="显示名称" />
+                </template>
+              </el-table-column>
+              <el-table-column label="匹配主色" min-width="160">
+                <template #default="{ row }">
+                  <el-select v-model="row.color" filterable placeholder="选择字典主色" aria-label="匹配主色">
+                    <el-option v-for="n in dictNames.color" :key="n" :label="n" :value="n" />
+                  </el-select>
+                </template>
+              </el-table-column>
+              <el-table-column label="操作" width="80">
+                <template #default="{ $index }">
+                  <el-button link type="danger" :disabled="fortune.luckyColors.length <= 1" @click="fortune.luckyColors.splice($index, 1)">删除</el-button>
+                </template>
+              </el-table-column>
+            </el-table>
+            <el-button class="add" :disabled="fortune.luckyColors.length >= LUCKY_COLOR_MAX" @click="fortune.luckyColors.push({ label: '', color: '' })">新增幸运色</el-button>
+          </div>
+        </div>
+      </el-tab-pane>
     </el-tabs>
 
     <el-dialog v-model="dialog.visible" :title="dialog.index < 0 ? `新增${GROUPS[dialog.group]}` : `编辑${GROUPS[dialog.group]}`" width="620px">
@@ -125,7 +194,7 @@
 import { ElMessage, ElMessageBox } from 'element-plus';
 import { computed, onMounted, reactive, ref } from 'vue';
 // 共享默认值：未配置时在页面上展示并作为编辑起点（与设备端回落一致）
-import { DEFAULT_RECOMMEND_OPTIONS, DEFAULT_ZODIAC_WHEEL, ZODIACS } from '../../../../../packages/shared/src/index.js';
+import { DEFAULT_FORTUNE_LIBRARY, DEFAULT_RECOMMEND_OPTIONS, DEFAULT_ZODIAC_WHEEL, ZODIACS } from '../../../../../packages/shared/src/index.js';
 import { api } from '../../api.js';
 
 // 与服务端 lib/fun.js 的限制一致
@@ -138,6 +207,18 @@ const KEY_RE = /^[a-z][a-z0-9_]{0,31}$/;
 const GROUPS = { occasions: '场合', feelings: '感觉' };
 const WEIGHT_FIELDS = { scenes: '场景', colors: '主色', categories: '品类' };
 const KIND_OF = { scenes: 'scene', colors: 'color', categories: 'category' };
+const FORTUNE_LIST_MAX = 30;
+const TEMPLATE_MAX = 80;
+const SLOT_WORD_MAX = 20;
+const LUCKY_COLOR_MAX = 12;
+const TIERS = { high: '高分档（4~5 星）', mid: '中分档（3 星）', low: '低分档（1~2 星）' };
+const SLOTS = { opener: '开场词', energy: '能量词', mood: '情绪词', action: '行动词', advice: '建议词' };
+const BUILTINS = { zodiac: '星座名', color: '幸运色名' };
+// 模板插值里不能直接写 `{${k}}`（会和 Vue 的 }} 冲突），统一用函数生成
+const ph = (k) => `{${k}}`;
+const placeholderText = [...Object.entries(BUILTINS), ...Object.entries(SLOTS)].map(([k, t]) => `${ph(k)} ${t}`).join('、');
+
+const clone = (v) => JSON.parse(JSON.stringify(v));
 
 const tab = ref('wheel');
 const zodiac = ref(ZODIACS[0].key);
@@ -148,6 +229,8 @@ const wheel = reactive({});
 const options = reactive({ occasions: [], feelings: [] });
 const wheelState = reactive({ configured: false });
 const optState = reactive({ configured: false });
+const fortune = reactive(clone(DEFAULT_FORTUNE_LIBRARY));
+const fortuneState = reactive({ configured: false });
 
 // 含已停用标签（服务端同样接受）
 const dictNames = computed(() => {
@@ -155,8 +238,6 @@ const dictNames = computed(() => {
   for (const d of dicts.value) out[d.kind]?.push(d.name);
   return out;
 });
-
-const clone = (v) => JSON.parse(JSON.stringify(v));
 
 /** 服务端形状 { label, color } / { label, scene } → 表格行 { label, kind, value } */
 function setWheel(value) {
@@ -172,15 +253,30 @@ function setOptions(value) {
   options.feelings = src.feelings ?? [];
 }
 
+/** 未配置时用共享默认值；缺的档位 / 词槽补空数组，避免模板渲染报错 */
+function setFortune(value) {
+  const src = clone({ ...DEFAULT_FORTUNE_LIBRARY, ...value });
+  fortune.templates = Object.fromEntries(Object.keys(TIERS).map((k) => [k, src.templates?.[k] ?? []]));
+  fortune.slots = Object.fromEntries(Object.keys(SLOTS).map((k) => [k, src.slots?.[k] ?? []]));
+  fortune.luckyColors = src.luckyColors ?? [];
+}
+
 async function load() {
   loading.value = true;
   try {
-    const [d, w, o] = await Promise.all([api('admin/dicts'), api('admin/fun/zodiac-wheel'), api('admin/fun/recommend-options')]);
+    const [d, w, o, f] = await Promise.all([
+      api('admin/dicts'),
+      api('admin/fun/zodiac-wheel'),
+      api('admin/fun/recommend-options'),
+      api('admin/fun/fortune-library'),
+    ]);
     dicts.value = d.items;
     wheelState.configured = w.configured;
     setWheel(w.value);
     optState.configured = o.configured;
     setOptions(o.value);
+    fortuneState.configured = f.configured;
+    setFortune(f.value);
   } catch (e) {
     ElMessage.error(e.message);
   } finally {
@@ -248,21 +344,86 @@ async function saveOptions() {
   }
 }
 
+/** 去空格、非空、组内不重复（与服务端 normalizeFortune 一致，提示定位到具体条目） */
+function cleanList(list, where) {
+  const seen = new Set();
+  return list.map((raw, i) => {
+    const s = String(raw ?? '').trim();
+    if (!s) throw new Error(`${where}第 ${i + 1} 项：不能为空`);
+    if (seen.has(s)) throw new Error(`${where}第 ${i + 1} 项：「${s}」重复`);
+    seen.add(s);
+    return s;
+  });
+}
+
+const PLACEHOLDER_RE = /\{([^{}]*)\}/g;
+
+/** 前端预检；最终以服务端校验为准 */
+function fortunePayload() {
+  const allowed = new Set([...Object.keys(BUILTINS), ...Object.keys(SLOTS)]);
+  const templates = {};
+  for (const [tier, text] of Object.entries(TIERS)) {
+    if (!fortune.templates[tier].length) throw new Error(`${text}至少保留一条模板`);
+    templates[tier] = cleanList(fortune.templates[tier], text);
+    templates[tier].forEach((t, i) => {
+      for (const [, name] of t.matchAll(PLACEHOLDER_RE)) {
+        if (!allowed.has(name)) throw new Error(`${text}第 ${i + 1} 项：未知占位符「{${name}}」`);
+      }
+    });
+  }
+  const slots = {};
+  for (const [slot, text] of Object.entries(SLOTS)) {
+    if (!fortune.slots[slot].length) throw new Error(`${text}至少保留一项`);
+    slots[slot] = cleanList(fortune.slots[slot], text);
+  }
+  if (!fortune.luckyColors.length) throw new Error('幸运色至少保留一项');
+  const labels = new Set();
+  const luckyColors = fortune.luckyColors.map((c, i) => {
+    const label = String(c.label ?? '').trim();
+    if (!label) throw new Error(`幸运色第 ${i + 1} 项：请填写名称`);
+    if (labels.has(label)) throw new Error(`幸运色第 ${i + 1} 项：名称「${label}」重复`);
+    labels.add(label);
+    if (!c.color) throw new Error(`幸运色第 ${i + 1} 项：请选择匹配主色`);
+    return { label, color: c.color };
+  });
+  return { templates, slots, luckyColors };
+}
+
+async function saveFortune() {
+  let body;
+  try {
+    body = fortunePayload();
+  } catch (e) {
+    return ElMessage.warning(e.message);
+  }
+  busy.value = 'fortune';
+  try {
+    const r = await api('admin/fun/fortune-library', { method: 'PUT', body });
+    fortuneState.configured = r.configured;
+    setFortune(r.value);
+    ElMessage.success('已保存，设备下次拉取配置时生效');
+  } catch (e) {
+    ElMessage.error(e.message);
+  } finally {
+    busy.value = '';
+  }
+}
+
+const RESETS = {
+  wheel: { name: '星座轮盘映射', path: 'zodiac-wheel', state: wheelState, set: setWheel },
+  options: { name: 'AI 推荐选项', path: 'recommend-options', state: optState, set: setOptions },
+  fortune: { name: '运势文案库', path: 'fortune-library', state: fortuneState, set: setFortune },
+};
+
 async function reset(which) {
-  const name = which === 'wheel' ? '星座轮盘映射' : 'AI 推荐选项';
+  const { name, path, state, set } = RESETS[which];
   const ok = await ElMessageBox.confirm(`恢复「${name}」为系统默认值？当前自定义内容会被清除。`, '恢复默认', { type: 'warning' }).catch(() => false);
   if (!ok) return;
   busy.value = `${which}-reset`;
   try {
-    const path = which === 'wheel' ? 'zodiac-wheel' : 'recommend-options';
     const r = await api(`admin/fun/${path}/reset`, { method: 'POST', body: {} });
-    if (which === 'wheel') {
-      wheelState.configured = r.configured;
-      setWheel(r.value);
-    } else {
-      optState.configured = r.configured;
-      setOptions(r.value);
-    }
+    state.configured = r.configured;
+    set(r.value);
     ElMessage.success('已恢复默认');
   } catch (e) {
     ElMessage.error(e.message);
@@ -344,5 +505,29 @@ onMounted(load);
   display: flex;
   align-items: center;
   gap: 8px;
+}
+.list-block {
+  margin-top: 12px;
+}
+.list-title {
+  margin-bottom: 8px;
+  font-weight: 500;
+}
+.list-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+.words {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+.word {
+  display: flex;
+  align-items: center;
+  gap: 2px;
 }
 </style>
