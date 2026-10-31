@@ -9,7 +9,7 @@
 
 - 素材：`video`（mp4/webm，≤200MB）或 `image`（jpg/png/webp，≤10MB），存我们自己的存储，路径 `media/ads/...`。
 - 播放列表：总后台按设备投放；每台设备一个有序列表，条目 `{ assetId, seconds }`，`seconds` 只对图片生效（1~120，默认 8），视频播完即切。未单独配置的设备用“默认列表”（device_id 为空）。
-- 空闲：任意指针事件重置；`idleMinutes`（默认 4）无操作进入播放页，若在试穿先 `disconnect` 并上报离屏。
+- 空闲：任意指针事件重置；`idleMinutes`（默认 4）无操作进入播放页。试穿页在屏时不进待机，由试穿上限结束（2026-10-31 调整 PLY-03）。
 - 试穿上限：`tryonMaxMinutes`（Phase 3 已有配置，默认 5）到时弹“点击继续”，15 秒无人点结束试穿并上报。
 - 热门榜：近 7 天 `TRYON_CONSUME` 次数排序取前 20；管理员置顶（排最前，按置顶顺序）或移出（不进榜）。仍只返回设备可见服饰。
 - 短剧专题：`{ title, posterKey, garmentIds[], sort, enabled }`；设备只拿启用专题及其可见服饰。
