@@ -13,7 +13,7 @@ const listQuery = {
 };
 
 // 对外 state 的 SQL 口径，与 publicState() 一致：pending 为照片生成中；作废、过期、已清理算 expired
-const STATE_SQL = {
+export const STATE_SQL = {
   valid: VALID_SQL,
   pending: PENDING_SQL,
   redeemed: '(s.redeemed_at IS NOT NULL)',
