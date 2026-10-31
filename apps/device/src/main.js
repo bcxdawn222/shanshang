@@ -1,4 +1,5 @@
 import './style.css';
+import './glass.css';
 import { clearIdentity, errorMessage, loadIdentity, logoSrc, request, saveIdentity, setToken } from './api.js';
 import { h } from './dom.js';
 import { invalidateGarments } from './garments.js';

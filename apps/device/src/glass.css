@@ -1,0 +1,272 @@
+/* 毛玻璃工具类 + glass.js 组件样式。在 style.css 之后引入，同优先级时覆盖 .btn 的默认底色。
+ * 用法：
+ *   .glass                 玻璃材质（模糊 + 半透明底 + 细描边）；不加变体时跟随 body 主题
+ *   .glass-light / -dark   强制白基底 / 黑基底（theme-black 默认 dark，theme-white 默认 light）
+ *   .glass-hover           hover / 按下时底色更不透明；触摸屏靠 :active
+ * 性能：backdrop-filter 每个元素一层合成，不要嵌套玻璃，也不要盖在试穿实时画面上。
+ * 想整体关掉模糊：把 --g-filter 改成 none。
+ */
+:root {
+  /* ── 参数（调这里） ── */
+  --g-blur: 16px;
+  --g-filter: blur(var(--g-blur));
+  --g-ms: 160ms;
+  --g-modal-z: 80;
+  --g-scrim: rgba(0, 0, 0, 0.5);
+
+  /* 中性基底（未指定主题时） */
+  --g-bg: rgba(255, 255, 255, 0.1);
+  --g-bg-hover: rgba(255, 255, 255, 0.18);
+  --g-bg-strong: rgba(40, 40, 58, 0.62);
+  --g-border: rgba(255, 255, 255, 0.18);
+
+  /* 白基底 */
+  --g-light-bg: rgba(255, 255, 255, 0.55);
+  --g-light-bg-hover: rgba(255, 255, 255, 0.72);
+  --g-light-bg-strong: rgba(255, 255, 255, 0.78);
+  --g-light-border: rgba(255, 255, 255, 0.7);
+  --g-light-fg: #1c1c1e;
+  --g-light-chip: rgba(28, 28, 30, 0.06);
+
+  /* 黑基底 */
+  --g-dark-bg: rgba(0, 0, 0, 0.25);
+  --g-dark-bg-hover: rgba(0, 0, 0, 0.4);
+  --g-dark-bg-strong: rgba(16, 16, 26, 0.62);
+  --g-dark-border: rgba(255, 255, 255, 0.18);
+  --g-dark-fg: #f5f5f7;
+  --g-dark-chip: rgba(255, 255, 255, 0.1);
+
+  /* 当前生效值（由主题 / 变体切换） */
+  --gx-bg: var(--g-bg);
+  --gx-bg-hover: var(--g-bg-hover);
+  --gx-bg-strong: var(--g-bg-strong);
+  --gx-border: var(--g-border);
+  --gx-fg: inherit;
+  --gx-chip: rgba(255, 255, 255, 0.1);
+}
+
+/* 主题默认变体；元素上的 .glass-light / .glass-dark 优先于从 body 继承的值 */
+body.theme-black,
+.glass-dark {
+  --gx-bg: var(--g-dark-bg);
+  --gx-bg-hover: var(--g-dark-bg-hover);
+  --gx-bg-strong: var(--g-dark-bg-strong);
+  --gx-border: var(--g-dark-border);
+  --gx-fg: var(--g-dark-fg);
+  --gx-chip: var(--g-dark-chip);
+}
+
+body.theme-white,
+.glass-light {
+  --gx-bg: var(--g-light-bg);
+  --gx-bg-hover: var(--g-light-bg-hover);
+  --gx-bg-strong: var(--g-light-bg-strong);
+  --gx-border: var(--g-light-border);
+  --gx-fg: var(--g-light-fg);
+  --gx-chip: var(--g-light-chip);
+}
+
+/* ───────── 工具类 ───────── */
+.glass {
+  border: 1px solid var(--gx-border);
+  background: var(--gx-bg);
+  box-shadow: var(--glass-shadow-sm, none), var(--glass-inset, 0 0 0 transparent);
+  color: var(--gx-fg);
+  -webkit-backdrop-filter: var(--g-filter);
+  backdrop-filter: var(--g-filter);
+}
+
+.glass-hover {
+  transition: background-color var(--g-ms) ease, border-color var(--g-ms) ease, transform var(--press-ms, 120ms) ease,
+    opacity 0.2s ease;
+}
+
+/* 触摸屏没有 hover：按下态必须有；hover 只给真正能悬停的指针，避免点完后“粘住” */
+.glass-hover:not([disabled]):active {
+  background-color: var(--gx-bg-hover);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .glass-hover:not([disabled]):hover {
+    background-color: var(--gx-bg-hover);
+  }
+}
+
+/* 不支持 backdrop-filter：换成接近不透明的底色，保证可读 */
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  :root {
+    --g-bg: rgba(40, 40, 58, 0.9);
+    --g-bg-hover: rgba(58, 58, 80, 0.94);
+    --g-bg-strong: rgba(40, 40, 58, 0.95);
+
+    --g-light-bg: rgba(255, 255, 255, 0.92);
+    --g-light-bg-hover: rgba(236, 236, 244, 0.97);
+    --g-light-bg-strong: rgba(255, 255, 255, 0.96);
+    --g-light-border: rgba(28, 28, 30, 0.12);
+
+    --g-dark-bg: rgba(20, 20, 30, 0.9);
+    --g-dark-bg-hover: rgba(36, 36, 50, 0.94);
+    --g-dark-bg-strong: rgba(20, 20, 30, 0.95);
+  }
+}
+
+/* ───────── glassCard ───────── */
+.glass-card {
+  padding: 3vh 4vw;
+  border-radius: var(--radius-card, 24px);
+}
+
+.glass-card-title {
+  margin: 0 0 2vh;
+  font-size: var(--fs-big);
+  font-weight: 700;
+}
+
+.glass-card-head {
+  margin-bottom: 2vh;
+}
+
+/* ───────── glassButton ───────── */
+.glass-btn {
+  min-height: 64px;
+  min-width: 64px;
+}
+
+.glass-btn:focus-visible,
+.glass-input:focus-visible,
+.glass-modal-close:focus-visible {
+  outline: 3px solid var(--accent-solid, #0a84ff);
+  outline-offset: 3px;
+}
+
+/* ───────── glassInput ───────── */
+.glass-field {
+  display: flex;
+  flex-direction: column;
+  gap: 1vh;
+}
+
+.glass-field-label {
+  font-size: var(--fs-small);
+  font-weight: 600;
+  color: var(--muted);
+}
+
+.glass-input {
+  min-height: 64px;
+  width: 100%;
+  padding: 0 24px;
+  border-radius: var(--radius-btn, 20px);
+  font: inherit;
+  font-size: var(--fs-body);
+  user-select: text;
+  -webkit-user-select: text;
+  touch-action: manipulation;
+}
+
+.glass-input::placeholder {
+  color: var(--muted);
+  opacity: 1;
+}
+
+/* ───────── glassModal：遮罩只压暗不模糊，只有卡片是玻璃 ───────── */
+.glass-modal {
+  position: fixed;
+  inset: 0;
+  z-index: var(--g-modal-z);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 6vw;
+  background: var(--g-scrim);
+}
+
+.glass-modal[hidden] {
+  display: none;
+}
+
+.glass-modal-card {
+  width: min(84vw, 720px);
+  max-height: 90vh;
+  overflow-y: auto;
+  padding: 3vh 4vw 4vh;
+  border-radius: 32px;
+  /* 弹层文字多，用更不透明的底色保证可读 */
+  background-color: var(--gx-bg-strong);
+  box-shadow: var(--glass-shadow, none), var(--glass-inset, 0 0 0 transparent);
+  text-align: center;
+}
+
+.glass-modal-head {
+  display: grid;
+  grid-template-columns: 64px minmax(0, 1fr) 64px;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 2vh;
+}
+
+.glass-modal-title {
+  margin: 0;
+  font-size: var(--fs-big);
+  font-weight: 700;
+}
+
+/* 关闭按钮不叠第二层模糊；覆盖 .tryon .btn-ghost 的画面浮层色 */
+.glass-modal .glass-modal-close {
+  width: 64px;
+  height: 64px;
+  min-width: 64px;
+  min-height: 64px;
+  padding: 0;
+  border-color: transparent;
+  border-radius: 50%;
+  background: var(--gx-chip);
+  color: var(--gx-fg);
+  font-size: var(--fs-body);
+  line-height: 1;
+}
+
+/* 试穿页扫码弹层（snapshot.js 传 class: 'snap-layer'）：保持原来的层级，
+ * 留在 .tryon 内、压在试穿时长上限遮罩（z-index 60）之下 */
+.glass-modal.snap-layer {
+  position: absolute;
+  z-index: 55;
+}
+
+.snap-layer .glass-modal-body p {
+  margin: 0 0 2vh;
+}
+
+/* ───────── glassNavbar ───────── */
+.glass-navbar {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 16px;
+  padding: 10px;
+  border-radius: var(--radius-panel, 28px);
+}
+
+.glass-navbar-side {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.glass-navbar-right {
+  justify-content: flex-end;
+}
+
+.glass-navbar-center {
+  min-width: 0;
+  text-align: center;
+}
+
+.glass-navbar-title {
+  margin: 0;
+  font-size: var(--fs-big);
+  font-weight: 700;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

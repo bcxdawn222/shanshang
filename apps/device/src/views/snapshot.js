@@ -2,6 +2,7 @@ import { errorMessage, request } from '../api.js';
 import { button, h, toast } from '../dom.js';
 import { bindTap } from '../tap.js';
 import { trackEvent } from '../events.js';
+import { glassModal } from '../glass.js';
 
 /**
  * 试穿中“扫码领优惠”（RDM-01，接口见 docs/03-接口与集成/Phase5-接口约定.md §2）：
@@ -194,14 +195,12 @@ export function createSnapshotFlow({ remote, onScreenGarment }) {
 
   const btn = h('button', { type: 'button', class: 'badge-qr', 'aria-label': '扫码领优惠' }, '扫码领优惠');
 
-  // 确认层
-  const confirmLayer = h(
-    'div',
-    { class: 'snap-layer', role: 'dialog', 'aria-modal': 'true', hidden: true },
-    h(
-      'div',
-      { class: 'snap-card' },
-      h('p', { class: 'snap-title' }, '扫码将保存您的试穿照片'),
+  // 确认层（玻璃弹层；右上角关闭等同取消）
+  const confirmModal = glassModal({
+    title: '扫码将保存您的试穿照片',
+    class: 'snap-layer',
+    onClose: () => closeConfirm(),
+    children: [
       h('p', { class: 'snap-tip' }, '只保存当前试穿画面，用于领取到店优惠'),
       h(
         'div',
@@ -209,28 +208,28 @@ export function createSnapshotFlow({ remote, onScreenGarment }) {
         button('取消', () => closeConfirm(), 'btn btn-ghost'),
         button('确认', () => void run(), 'btn btn-primary'),
       ),
-    ),
-  );
+    ],
+  });
+  const confirmLayer = confirmModal.el;
 
-  // 二维码层
+  // 二维码层：二维码本身保持纯白不透明底（.snap-qr），方便扫码
   const qrBox = h('div', { class: 'snap-qr' });
   const qrCode = h('p', { class: 'snap-code' });
   const qrCount = h('p', { class: 'snap-count' });
-  const qrLayer = h(
-    'div',
-    { class: 'snap-layer', role: 'dialog', 'aria-modal': 'true', hidden: true },
-    h(
-      'div',
-      { class: 'snap-card' },
-      h('p', { class: 'snap-title' }, '微信扫码保存试穿照片'),
+  const qrModal = glassModal({
+    title: '微信扫码保存试穿照片',
+    class: 'snap-layer',
+    onClose: () => closeQr(),
+    children: [
       qrBox,
       h('p', { class: 'snap-tip' }, '核销码'),
       qrCode,
       h('p', { class: 'snap-tip' }, '7 天内到店出示核销'),
       h('div', { class: 'snap-actions' }, button('关闭', () => closeQr(), 'btn btn-ghost')),
       qrCount,
-    ),
-  );
+    ],
+  });
+  const qrLayer = qrModal.el;
 
   function sync() {
     btn.disabled = disposed || busy || !onScreenGarment();
@@ -243,14 +242,14 @@ export function createSnapshotFlow({ remote, onScreenGarment }) {
   }
 
   function closeConfirm() {
-    confirmLayer.hidden = true;
+    confirmModal.close();
     setBusy(false);
   }
 
   function closeQr() {
     clearInterval(qrTimer);
     qrTimer = null;
-    qrLayer.hidden = true;
+    qrModal.close();
     qrBox.replaceChildren();
   }
 
@@ -260,7 +259,7 @@ export function createSnapshotFlow({ remote, onScreenGarment }) {
     qrCode.textContent = code;
     let left = QR_SECONDS;
     qrCount.textContent = `${left} 秒后自动关闭`;
-    qrLayer.hidden = false;
+    qrModal.open();
     qrTimer = setInterval(() => {
       left -= 1;
       if (left > 0) qrCount.textContent = `${left} 秒后自动关闭`;
@@ -275,12 +274,12 @@ export function createSnapshotFlow({ remote, onScreenGarment }) {
       return;
     }
     setBusy(true); // 确认层打开期间也算占用，防止连点
-    confirmLayer.hidden = false;
+    confirmModal.open();
   });
 
   async function run() {
-    if (disposed || confirmLayer.hidden) return;
-    confirmLayer.hidden = true;
+    if (disposed || !confirmModal.isOpen()) return;
+    confirmModal.close();
     const garment = onScreenGarment();
     if (!garment) {
       setBusy(false);
@@ -320,7 +319,7 @@ export function createSnapshotFlow({ remote, onScreenGarment }) {
   function dispose() {
     if (disposed) return;
     disposed = true;
-    confirmLayer.hidden = true;
+    confirmModal.close();
     closeQr();
     sync();
   }

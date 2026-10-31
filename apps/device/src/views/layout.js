@@ -1,4 +1,5 @@
 import { button, h } from '../dom.js';
+import { glassNavbar } from '../glass.js';
 
 /** 二级页通用骨架：返回 / 返回首页 + 标题，内容区由调用方填充 */
 export function pageShell(root, nav, { title, subtitle } = {}) {
@@ -7,13 +8,11 @@ export function pageShell(root, nav, { title, subtitle } = {}) {
     h(
       'div',
       { class: 'page' },
-      h(
-        'header',
-        { class: 'page-head' },
-        button('‹ 返回', () => nav.back(), 'btn btn-ghost'),
-        h('div', { class: 'page-title' }, h('h2', {}, title || ''), subtitle ? h('p', {}, subtitle) : null),
-        button('返回首页', () => nav.home(), 'btn btn-ghost'),
-      ),
+      glassNavbar({
+        title: h('div', { class: 'page-title' }, h('h2', {}, title || ''), subtitle ? h('p', {}, subtitle) : null),
+        left: button('‹ 返回', () => nav.back(), 'btn btn-ghost'),
+        right: button('返回首页', () => nav.home(), 'btn btn-ghost'),
+      }),
       body,
     ),
   );
