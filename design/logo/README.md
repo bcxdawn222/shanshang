@@ -1,5 +1,7 @@
 # 闪裳Live Logo 三版（ACC-05）
 
+**定稿：B 版**（2026-10-31 产品选定）。`logo-b-icon.svg` 已复制为 `apps/admin/public/favicon.svg`、`apps/device/public/favicon.svg`，作为浏览器标签图标和未配置 logoUrl 时的默认 Logo。
+
 打开 `preview.html` 可在深/浅背景下对比三版及 16/32/64/256 尺寸。所有 SVG 均为手写几何笔画，不依赖字体、无位图、无脚本、无外链。
 
 ## 三版说明
