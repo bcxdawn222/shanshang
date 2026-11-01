@@ -4,13 +4,15 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
     <meta name="robots" content="noindex" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <title>闪裳Live</title>
   </head>
-  <body>
-    <main id="app" aria-live="polite">
+  <body class="theme-black">
+    <main id="app">
       <h1 class="brand" id="brand">闪裳Live</h1>
-      <section id="view" class="view"></section>
+      <section id="view" class="view" aria-live="polite"></section>
     </main>
+    <div id="toast" class="toast" role="status" hidden></div>
     <script type="module" src="/src/main.js"></script>
   </body>
 </html>

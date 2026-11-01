@@ -1,11 +1,15 @@
+import fs from 'node:fs';
+import os from 'node:os';
+import path from 'node:path';
 import { buildApp } from '../src/app.js';
 import { loadConfig } from '../src/config.js';
 import { openDb } from '../src/db.js';
+import { createLocalStorage } from '../src/lib/storage.js';
 
 export const ADMIN = { username: 'root', password: 'admin-pass-1234' };
 
 /** 内存库 + 假 Xmax + 可拨动时钟 */
-export async function makeApp({ env = {}, fetchImpl } = {}) {
+export async function makeApp({ env = {}, fetchImpl, uploadLimits } = {}) {
   const db = openDb(':memory:');
   let clock = Date.UTC(2026, 9, 30, 8, 0, 0);
   const now = () => clock;
@@ -26,17 +30,23 @@ export async function makeApp({ env = {}, fetchImpl } = {}) {
         { status: 200, headers: { 'content-type': 'application/json' } },
       );
     });
-  const app = await buildApp({ config, db, fetchImpl: fakeFetch, now });
+  // 每个测试一个临时媒体目录，结束即删
+  const mediaDir = fs.mkdtempSync(path.join(os.tmpdir(), 'shanshang-media-'));
+  const storage = createLocalStorage(mediaDir);
+  const app = await buildApp({ config, db, storage, fetchImpl: fakeFetch, now, ...(uploadLimits ? { uploadLimits } : {}) });
   return {
     app,
     db,
     calls,
+    storage,
+    mediaDir,
     advance(ms) {
       clock += ms;
     },
     async close() {
       await app.close();
       db.close();
+      fs.rmSync(mediaDir, { recursive: true, force: true });
     },
   };
 }

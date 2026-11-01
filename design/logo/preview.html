@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>闪裳Live Logo 三版预览（ACC-05）</title>
+    <style>
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        font-family: -apple-system, 'PingFang SC', 'Microsoft YaHei', sans-serif;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+      }
+      section { padding: 24px 32px; min-height: 100vh; }
+      .dark { background: radial-gradient(circle at 30% 20%, #2a1f4f, #0b0b16 70%); color: #e8e6f5; }
+      .light { background: radial-gradient(circle at 30% 20%, #ffe9fa, #f6f7fb 70%); color: #1e1840; }
+      h1 { font-size: 18px; margin: 0 0 16px; }
+      h2 { font-size: 15px; margin: 28px 0 10px; opacity: 0.8; }
+      .wide img { display: block; height: 72px; width: auto; margin-bottom: 10px; }
+      .wide img.small { height: 32px; }
+      .sizes { display: flex; align-items: flex-end; gap: 18px; flex-wrap: wrap; }
+      .sizes figure { margin: 0; text-align: center; font-size: 12px; }
+      .sizes img { display: block; margin: 0 auto 4px; }
+      .px16 { width: 16px; height: 16px; }
+      .px32 { width: 32px; height: 32px; }
+      .px64 { width: 64px; height: 64px; }
+      .px256 { width: 256px; height: 256px; }
+      code { font-size: 12px; opacity: 0.7; }
+    </style>
+  </head>
+  <body>
+    <section class="dark">
+      <h1>深色背景（设备 theme-black）</h1>
+
+      <h2>A 字标 <code>logo-a-dark.svg / logo-a-icon.svg</code></h2>
+      <div class="wide"><img src="logo-a-dark.svg" alt="A 横版" /><img class="small" src="logo-a-dark.svg" alt="A 横版小" /></div>
+      <div class="sizes">
+        <figure><img class="px16" src="logo-a-icon.svg" alt="" />16</figure>
+        <figure><img class="px32" src="logo-a-icon.svg" alt="" />32</figure>
+        <figure><img class="px64" src="logo-a-icon.svg" alt="" />64</figure>
+        <figure><img class="px256" src="logo-a-icon.svg" alt="" />256</figure>
+      </div>
+
+      <h2>B 图形标 + 字 <code>logo-b-dark.svg / logo-b-icon.svg</code></h2>
+      <div class="wide"><img src="logo-b-dark.svg" alt="B 横版" /><img class="small" src="logo-b-dark.svg" alt="B 横版小" /></div>
+      <div class="sizes">
+        <figure><img class="px16" src="logo-b-icon.svg" alt="" />16</figure>
+        <figure><img class="px32" src="logo-b-icon.svg" alt="" />32</figure>
+        <figure><img class="px64" src="logo-b-icon.svg" alt="" />64</figure>
+        <figure><img class="px256" src="logo-b-icon.svg" alt="" />256</figure>
+      </div>
+
+      <h2>C 极简几何 <code>logo-c-dark.svg / logo-c-icon.svg</code></h2>
+      <div class="wide"><img src="logo-c-dark.svg" alt="C 横版" /><img class="small" src="logo-c-dark.svg" alt="C 横版小" /></div>
+      <div class="sizes">
+        <figure><img class="px16" src="logo-c-icon.svg" alt="" />16</figure>
+        <figure><img class="px32" src="logo-c-icon.svg" alt="" />32</figure>
+        <figure><img class="px64" src="logo-c-icon.svg" alt="" />64</figure>
+        <figure><img class="px256" src="logo-c-icon.svg" alt="" />256</figure>
+      </div>
+    </section>
+
+    <section class="light">
+      <h1>浅色背景（设备 theme-white / 后台）</h1>
+
+      <h2>A 字标 <code>logo-a.svg / logo-a-icon.svg</code></h2>
+      <div class="wide"><img src="logo-a.svg" alt="A 横版" /><img class="small" src="logo-a.svg" alt="A 横版小" /></div>
+      <div class="sizes">
+        <figure><img class="px16" src="logo-a-icon.svg" alt="" />16</figure>
+        <figure><img class="px32" src="logo-a-icon.svg" alt="" />32</figure>
+        <figure><img class="px64" src="logo-a-icon.svg" alt="" />64</figure>
+        <figure><img class="px256" src="logo-a-icon.svg" alt="" />256</figure>
+      </div>
+
+      <h2>B 图形标 + 字 <code>logo-b.svg / logo-b-icon.svg</code></h2>
+      <div class="wide"><img src="logo-b.svg" alt="B 横版" /><img class="small" src="logo-b.svg" alt="B 横版小" /></div>
+      <div class="sizes">
+        <figure><img class="px16" src="logo-b-icon.svg" alt="" />16</figure>
+        <figure><img class="px32" src="logo-b-icon.svg" alt="" />32</figure>
+        <figure><img class="px64" src="logo-b-icon.svg" alt="" />64</figure>
+        <figure><img class="px256" src="logo-b-icon.svg" alt="" />256</figure>
+      </div>
+
+      <h2>C 极简几何 <code>logo-c.svg / logo-c-icon.svg</code></h2>
+      <div class="wide"><img src="logo-c.svg" alt="C 横版" /><img class="small" src="logo-c.svg" alt="C 横版小" /></div>
+      <div class="sizes">
+        <figure><img class="px16" src="logo-c-icon.svg" alt="" />16</figure>
+        <figure><img class="px32" src="logo-c-icon.svg" alt="" />32</figure>
+        <figure><img class="px64" src="logo-c-icon.svg" alt="" />64</figure>
+        <figure><img class="px256" src="logo-c-icon.svg" alt="" />256</figure>
+      </div>
+    </section>
+  </body>
+</html>

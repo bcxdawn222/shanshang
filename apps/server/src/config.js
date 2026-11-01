@@ -18,6 +18,8 @@ export function loadConfig(env = process.env) {
     sessionTtlMs: int(env.SESSION_TTL_HOURS, 168) * 3600_000,
     adminUsername: env.ADMIN_USERNAME || '',
     adminPassword: env.ADMIN_PASSWORD || '',
+    // 快照二维码用的外网地址（如 https://example.com/sl），去掉末尾 /；为空时按请求推算（仅本地开发）
+    publicBaseUrl: (env.PUBLIC_BASE_URL || '').trim().replace(/\/+$/, ''),
     xmax: {
       apiKey: env.XMAX_API_KEY || '',
       apiBase: (env.XMAX_API_BASE || '').replace(/\/+$/, ''),

@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 492 120" width="492" height="120" role="img" aria-label="闪裳 LIVE">
+  <title>闪裳 LIVE</title>
+  <!-- C 极简几何·深色背景版：文字白色，图形不变 -->
+  <defs>
+    <clipPath id="c-clip">
+      <circle cx="16" cy="16" r="15" />
+    </clipPath>
+    <mask id="c-mask" maskUnits="userSpaceOnUse" x="0" y="0" width="32" height="32">
+      <rect width="32" height="32" fill="#fff" />
+      <path d="M21 0 L11.5 15 L20.5 17 L11 32" fill="none" stroke="#000" stroke-width="2.6" stroke-linejoin="miter" stroke-miterlimit="10" />
+    </mask>
+  </defs>
+  <g transform="translate(8 12) scale(3)">
+    <g clip-path="url(#c-clip)" mask="url(#c-mask)">
+      <rect width="32" height="32" fill="#7b5cff" />
+      <path d="M21 0 L11.5 15 L20.5 17 L11 32 H32 V0 Z" fill="#ff4fd8" />
+    </g>
+  </g>
+  <g transform="translate(124 14) scale(0.92)" fill="none" stroke="#ffffff" stroke-width="6.5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M20 6 L30 16 M14 28 V96 M40 12 H86 V86 Q86 95 75 93 M54 32 C53 58 44 74 28 86 M56 54 C62 68 68 76 74 82" />
+    <path transform="translate(112 0)" d="M50 2 V13 M28 4 L33 12 M72 4 L67 12 M14 31 V21 H86 V31 M34 33 H66 V48 H34 Z M50 48 V63 M16 63 H84 M46 63 Q38 84 18 96 M74 70 L60 80 M50 74 Q64 90 86 96" />
+    <path d="M240 30 V96 H272 M288 30 V96 M304 30 L322 96 L340 30 M388 30 H356 V96 H388 M356 63 H382" />
+  </g>
+</svg>

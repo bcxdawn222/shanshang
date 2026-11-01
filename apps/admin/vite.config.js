@@ -8,6 +8,7 @@ export default defineConfig(({ command }) => ({
   server: {
     host: '127.0.0.1',
     port: 5180,
-    proxy: { '/api': 'http://127.0.0.1:8300' },
+    // /s/ 是快照页和快照图（服务端直出，不在 /api 下）；带斜杠，免得误匹配 /src/
+    proxy: { '/api': 'http://127.0.0.1:8300', '/s/': 'http://127.0.0.1:8300' },
   },
 }));

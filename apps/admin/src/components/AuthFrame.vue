@@ -1,11 +1,12 @@
 <template>
   <!-- 登录 / 注册页外框；背景图由总后台配置（ACC-04），未配置时用渐变占位 -->
   <div class="auth" :style="bgStyle">
-    <div class="card">
+    <!-- 背景图任意深浅都要可读，所以用 strong（更不透明、模糊更强） -->
+    <GlassCard strong class="card">
       <Brand class="head" />
       <h1>{{ title }}</h1>
       <slot />
-    </div>
+    </GlassCard>
   </div>
 </template>
 
@@ -13,13 +14,14 @@
 import { computed } from 'vue';
 import { store } from '../store.js';
 import Brand from './Brand.vue';
+import { GlassCard } from './glass/index.js';
 
 defineProps({ title: { type: String, required: true } });
 
 const bgStyle = computed(() =>
   store.settings.loginBgUrl
     ? { backgroundImage: `url("${encodeURI(store.settings.loginBgUrl)}")` }
-    : { backgroundImage: 'linear-gradient(135deg, #1b1035 0%, #3a1c71 45%, #0f4c75 100%)' },
+    : { backgroundImage: 'var(--glass-auth-bg)' },
 );
 </script>
 
@@ -29,27 +31,27 @@ const bgStyle = computed(() =>
   display: flex;
   align-items: center;
   justify-content: center;
+  background-color: var(--glass-page-color);
   background-size: cover;
   background-position: center;
   padding: 24px;
   box-sizing: border-box;
 }
+/* 居中毛玻璃卡片：玻璃面 / 阴影由 GlassCard 负责，这里只定尺寸和圆角 */
 .card {
+  --glass-card-padding: 32px 30px 22px;
+  --glass-card-radius: 20px;
   width: 100%;
   max-width: 380px;
-  background: rgba(255, 255, 255, 0.96);
-  border-radius: 12px;
-  padding: 28px 28px 20px;
-  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.25);
 }
 .head {
   justify-content: center;
 }
 h1 {
-  font-size: 16px;
-  font-weight: 500;
+  font-size: 17px;
+  font-weight: 600;
   text-align: center;
-  color: #555;
-  margin: 12px 0 20px;
+  color: var(--el-text-color-primary);
+  margin: 14px 0 22px;
 }
 </style>

@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32" role="img" aria-label="闪裳Live">
+  <title>闪裳Live</title>
+  <!-- C 图标：圆形"镜面"被一道 Z 形闪电劈开，左紫右粉 = 本体与镜像。中间调配色，深浅背景通用 -->
+  <defs>
+    <clipPath id="c-clip">
+      <circle cx="16" cy="16" r="15" />
+    </clipPath>
+    <mask id="c-mask" maskUnits="userSpaceOnUse" x="0" y="0" width="32" height="32">
+      <rect width="32" height="32" fill="#fff" />
+      <path d="M21 0 L11.5 15 L20.5 17 L11 32" fill="none" stroke="#000" stroke-width="2.6" stroke-linejoin="miter" stroke-miterlimit="10" />
+    </mask>
+  </defs>
+  <g clip-path="url(#c-clip)" mask="url(#c-mask)">
+    <rect width="32" height="32" fill="#7b5cff" />
+    <path d="M21 0 L11.5 15 L20.5 17 L11 32 H32 V0 Z" fill="#ff4fd8" />
+  </g>
+</svg>

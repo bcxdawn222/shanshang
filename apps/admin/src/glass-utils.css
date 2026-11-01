@@ -1,0 +1,184 @@
+/*
+ * 毛玻璃工具类（替代 Tailwind 工具类）：.glass / .glass-light / .glass-dark / .glass-hover
+ * - glass.css 是整站主题；这里是可以随手加在任何元素上的工具类，components/glass/ 下的组件也基于它。
+ * - 所有数值都是 CSS 变量，调整时只改下面 :root 里的 --glass-u-* / --glass-c-*。
+ * - .glass-light / .glass-dark 除了画玻璃面，还会在元素上设置一组“当前变体”变量
+ *   （--glass-u-bg / --glass-u-text / --glass-c-bg ...），子元素和组件用它们取色。
+ * - 工具类本身不设置文字颜色：背景只有 10%~25% 不透明，字色要按实际底图决定；
+ *   需要时用 color: var(--glass-u-text)。组件里用的是更不透明的 --glass-c-* 表面，保证对比度。
+ *
+ * 注意：backdrop-filter 会让元素成为 position: fixed 后代的包含块，
+ * 不要把这些类加在 el-dialog 遮罩 / GlassModal 等 fixed 元素的祖先上（见 glass.css 顶部注释）。
+ */
+
+:root {
+  /* ---------- 工具类原始值 ---------- */
+  --glass-u-blur: 16px;
+  /* 100% 即不改饱和度；组件里会调到 180%，与 glass.css 一致 */
+  --glass-u-saturate: 100%;
+  --glass-u-duration: 0.2s;
+
+  /* 白基底 */
+  --glass-u-light-bg: rgba(255, 255, 255, 0.1);
+  --glass-u-light-bg-hover: rgba(255, 255, 255, 0.2);
+  --glass-u-light-border: rgba(255, 255, 255, 0.18);
+  --glass-u-light-text: #1d1d1f;
+  --glass-u-light-text-muted: #6e6e73;
+
+  /* 黑基底 */
+  --glass-u-dark-bg: rgba(0, 0, 0, 0.25);
+  --glass-u-dark-bg-hover: rgba(0, 0, 0, 0.4);
+  --glass-u-dark-border: rgba(255, 255, 255, 0.1);
+  --glass-u-dark-text: #f5f5f7;
+  --glass-u-dark-text-muted: #a1a1a6;
+
+  /* 不支持 backdrop-filter 时的接近不透明底色 */
+  --glass-u-light-fallback: rgba(248, 248, 251, 0.96);
+  --glass-u-light-fallback-hover: #fff;
+  --glass-u-dark-fallback: rgba(24, 24, 30, 0.96);
+  --glass-u-dark-fallback-hover: rgba(38, 38, 46, 0.98);
+
+  /* ---------- 组件表面（components/glass/*，比工具类更不透明以保证文字对比度） ---------- */
+  --glass-c-blur: 20px;
+  --glass-c-blur-strong: 28px;
+  --glass-c-saturate: 180%;
+  --glass-c-on-accent: #fff;
+  /* #0066cc / #c81e28 与白字对比度均 > 4.5:1 */
+  --glass-c-primary-bg: rgba(0, 102, 204, 0.92);
+  --glass-c-primary-bg-hover: rgba(0, 86, 176, 0.96);
+  --glass-c-primary-shadow: 0 2px 8px rgba(0, 102, 204, 0.28);
+  --glass-c-danger-bg: rgba(200, 30, 40, 0.92);
+  --glass-c-danger-bg-hover: rgba(172, 20, 30, 0.96);
+  --glass-c-danger-shadow: 0 2px 8px rgba(200, 30, 40, 0.24);
+
+  --glass-c-light-bg: rgba(255, 255, 255, 0.62);
+  --glass-c-light-bg-hover: rgba(255, 255, 255, 0.78);
+  --glass-c-light-bg-strong: rgba(255, 255, 255, 0.8);
+  --glass-c-light-border: rgba(255, 255, 255, 0.65);
+  --glass-c-light-edge: rgba(0, 0, 0, 0.1);
+  --glass-c-light-hairline: rgba(0, 0, 0, 0.06);
+  --glass-c-light-field: rgba(255, 255, 255, 0.72);
+  --glass-c-light-field-hover: rgba(255, 255, 255, 0.88);
+  --glass-c-light-hover-fill: rgba(0, 0, 0, 0.05);
+  --glass-c-light-focus: #0071e3;
+  --glass-c-light-focus-ring: rgba(0, 113, 227, 0.22);
+  --glass-c-light-danger-text: #c4161c;
+  --glass-c-light-danger-ring: rgba(196, 22, 28, 0.2);
+  --glass-c-light-mask: rgba(0, 0, 0, 0.28);
+
+  --glass-c-dark-bg: rgba(30, 30, 38, 0.58);
+  --glass-c-dark-bg-hover: rgba(46, 46, 56, 0.68);
+  --glass-c-dark-bg-strong: rgba(38, 38, 46, 0.8);
+  --glass-c-dark-border: rgba(255, 255, 255, 0.1);
+  --glass-c-dark-edge: rgba(255, 255, 255, 0.14);
+  --glass-c-dark-hairline: rgba(255, 255, 255, 0.08);
+  --glass-c-dark-field: rgba(255, 255, 255, 0.06);
+  --glass-c-dark-field-hover: rgba(255, 255, 255, 0.1);
+  --glass-c-dark-hover-fill: rgba(255, 255, 255, 0.08);
+  --glass-c-dark-focus: #3b9dff;
+  --glass-c-dark-focus-ring: rgba(59, 157, 255, 0.3);
+  --glass-c-dark-danger-text: #ff6b6b;
+  --glass-c-dark-danger-ring: rgba(255, 107, 107, 0.24);
+  --glass-c-dark-mask: rgba(0, 0, 0, 0.5);
+}
+
+/* ---------- 降级：不支持毛玻璃 / 用户要求降低透明度（与 glass.css 同样的判断） ---------- */
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  :root {
+    --glass-u-light-bg: var(--glass-u-light-fallback);
+    --glass-u-light-bg-hover: var(--glass-u-light-fallback-hover);
+    --glass-u-dark-bg: var(--glass-u-dark-fallback);
+    --glass-u-dark-bg-hover: var(--glass-u-dark-fallback-hover);
+    --glass-c-light-bg: var(--glass-u-light-fallback);
+    --glass-c-light-bg-hover: var(--glass-u-light-fallback-hover);
+    --glass-c-light-bg-strong: #fff;
+    --glass-c-dark-bg: var(--glass-u-dark-fallback);
+    --glass-c-dark-bg-hover: var(--glass-u-dark-fallback-hover);
+    --glass-c-dark-bg-strong: #26262e;
+  }
+}
+@media (prefers-reduced-transparency: reduce) {
+  :root {
+    --glass-u-light-bg: var(--glass-u-light-fallback);
+    --glass-u-light-bg-hover: var(--glass-u-light-fallback-hover);
+    --glass-u-dark-bg: var(--glass-u-dark-fallback);
+    --glass-u-dark-bg-hover: var(--glass-u-dark-fallback-hover);
+    --glass-c-light-bg: var(--glass-u-light-fallback);
+    --glass-c-light-bg-hover: var(--glass-u-light-fallback-hover);
+    --glass-c-light-bg-strong: #fff;
+    --glass-c-dark-bg: var(--glass-u-dark-fallback);
+    --glass-c-dark-bg-hover: var(--glass-u-dark-fallback-hover);
+    --glass-c-dark-bg-strong: #26262e;
+  }
+}
+
+/* ---------- 变体变量：.glass 等同 .glass-light；.glass-dark 写在后面，同时出现时深色生效 ---------- */
+.glass,
+.glass-light {
+  --glass-u-bg: var(--glass-u-light-bg);
+  --glass-u-bg-hover: var(--glass-u-light-bg-hover);
+  --glass-u-border: var(--glass-u-light-border);
+  --glass-u-text: var(--glass-u-light-text);
+  --glass-u-text-muted: var(--glass-u-light-text-muted);
+
+  --glass-c-bg: var(--glass-c-light-bg);
+  --glass-c-bg-hover: var(--glass-c-light-bg-hover);
+  --glass-c-bg-strong: var(--glass-c-light-bg-strong);
+  --glass-c-border: var(--glass-c-light-border);
+  --glass-c-edge: var(--glass-c-light-edge);
+  --glass-c-hairline: var(--glass-c-light-hairline);
+  --glass-c-field: var(--glass-c-light-field);
+  --glass-c-field-hover: var(--glass-c-light-field-hover);
+  --glass-c-hover-fill: var(--glass-c-light-hover-fill);
+  --glass-c-focus: var(--glass-c-light-focus);
+  --glass-c-focus-ring: var(--glass-c-light-focus-ring);
+  --glass-c-danger-text: var(--glass-c-light-danger-text);
+  --glass-c-danger-ring: var(--glass-c-light-danger-ring);
+}
+.glass-dark {
+  --glass-u-bg: var(--glass-u-dark-bg);
+  --glass-u-bg-hover: var(--glass-u-dark-bg-hover);
+  --glass-u-border: var(--glass-u-dark-border);
+  --glass-u-text: var(--glass-u-dark-text);
+  --glass-u-text-muted: var(--glass-u-dark-text-muted);
+
+  --glass-c-bg: var(--glass-c-dark-bg);
+  --glass-c-bg-hover: var(--glass-c-dark-bg-hover);
+  --glass-c-bg-strong: var(--glass-c-dark-bg-strong);
+  --glass-c-border: var(--glass-c-dark-border);
+  --glass-c-edge: var(--glass-c-dark-edge);
+  --glass-c-hairline: var(--glass-c-dark-hairline);
+  --glass-c-field: var(--glass-c-dark-field);
+  --glass-c-field-hover: var(--glass-c-dark-field-hover);
+  --glass-c-hover-fill: var(--glass-c-dark-hover-fill);
+  --glass-c-focus: var(--glass-c-dark-focus);
+  --glass-c-focus-ring: var(--glass-c-dark-focus-ring);
+  --glass-c-danger-text: var(--glass-c-dark-danger-text);
+  --glass-c-danger-ring: var(--glass-c-dark-danger-ring);
+}
+
+/* ---------- 玻璃面 ---------- */
+.glass,
+.glass-light,
+.glass-dark {
+  -webkit-backdrop-filter: blur(var(--glass-u-blur)) saturate(var(--glass-u-saturate));
+  backdrop-filter: blur(var(--glass-u-blur)) saturate(var(--glass-u-saturate));
+  background-color: var(--glass-u-bg);
+  border: 1px solid var(--glass-u-border);
+}
+
+/* ---------- 悬停加深 ---------- */
+.glass-hover {
+  transition:
+    background-color var(--glass-u-duration) ease,
+    border-color var(--glass-u-duration) ease,
+    box-shadow var(--glass-u-duration) ease;
+}
+.glass-hover:not(:disabled):not([aria-disabled='true']):hover {
+  background-color: var(--glass-u-bg-hover);
+}
+@media (prefers-reduced-motion: reduce) {
+  .glass-hover {
+    transition: none;
+  }
+}

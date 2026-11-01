@@ -48,6 +48,61 @@ export const STATUS_TAG = {
   bound: 'success',
 };
 
+/** 积分流水类型（接口约定 Phase 3 §1） */
+export const LEDGER_TYPE_TEXT = {
+  ADMIN_ADD: '平台加积分',
+  ADMIN_DEDUCT: '平台扣积分',
+  TRYON_CONSUME: '试穿消耗',
+  REFUND: '退还',
+};
+
+export const LEDGER_TYPE_TAG = {
+  ADMIN_ADD: 'success',
+  ADMIN_DEDUCT: 'warning',
+  TRYON_CONSUME: 'info',
+  REFUND: 'primary',
+};
+
+/** 快照状态（接口约定 Phase 5 §4）；pending 为照片生成中（不可核销），作废（预约 10 分钟未上传）按 expired 返回 */
+export const SNAPSHOT_STATE_TEXT = {
+  valid: '可核销',
+  pending: '生成中',
+  redeemed: '已核销',
+  expired: '已过期',
+};
+
+export const SNAPSHOT_STATE_TAG = {
+  valid: 'success',
+  pending: 'primary',
+  redeemed: 'info',
+  expired: 'warning',
+};
+
+/** 留言反馈状态（SET-07） */
+export const FEEDBACK_STATUS_TEXT = {
+  pending: '待处理',
+  replied: '已回复',
+};
+
+export const FEEDBACK_STATUS_TAG = {
+  pending: 'warning',
+  replied: 'success',
+};
+
+/** 毫秒时长 → 时:分:秒 */
+export function fmtDuration(ms) {
+  const total = Math.max(Math.floor((ms || 0) / 1000), 0);
+  const p = (n) => String(n).padStart(2, '0');
+  return `${Math.floor(total / 3600)}:${p(Math.floor((total % 3600) / 60))}:${p(total % 60)}`;
+}
+
+/** 积分显示：保留 2 位小数；signed 时正数带 + */
+export function fmtPoints(v, signed = false) {
+  const n = Number(v ?? 0);
+  const s = n.toFixed(2);
+  return signed && n > 0 ? `+${s}` : s;
+}
+
 export function fmtTime(ms) {
   if (!ms) return '—';
   const d = new Date(ms);

@@ -1,15 +1,23 @@
 <template>
-  <el-card shadow="never" style="max-width: 480px">
+  <el-card shadow="never">
     <el-form ref="formRef" :model="form" :rules="rules" label-width="96px" @submit.prevent="submit">
-      <el-form-item :label="`原${word}`" prop="oldPassword">
-        <el-input v-model="form.oldPassword" type="password" show-password autocomplete="current-password" />
-      </el-form-item>
-      <el-form-item :label="`新${word}`" prop="newPassword">
-        <el-input v-model="form.newPassword" type="password" show-password autocomplete="new-password" />
-      </el-form-item>
-      <el-form-item :label="`确认新${word}`" prop="confirm">
-        <el-input v-model="form.confirm" type="password" show-password autocomplete="new-password" />
-      </el-form-item>
+      <el-row :gutter="24">
+        <el-col :xs="24" :md="12" :lg="8">
+          <el-form-item :label="`原${word}`" prop="oldPassword">
+            <el-input v-model="form.oldPassword" type="password" show-password autocomplete="current-password" />
+          </el-form-item>
+        </el-col>
+        <el-col :xs="24" :md="12" :lg="8">
+          <el-form-item :label="`新${word}`" prop="newPassword">
+            <el-input v-model="form.newPassword" type="password" show-password autocomplete="new-password" />
+          </el-form-item>
+        </el-col>
+        <el-col :xs="24" :md="12" :lg="8">
+          <el-form-item :label="`确认新${word}`" prop="confirm">
+            <el-input v-model="form.confirm" type="password" show-password autocomplete="new-password" />
+          </el-form-item>
+        </el-col>
+      </el-row>
       <el-form-item>
         <el-button type="primary" native-type="submit" :loading="loading">保存</el-button>
         <span class="muted" style="margin-left: 12px">修改后其他设备上的登录会全部退出</span>

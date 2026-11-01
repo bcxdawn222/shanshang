@@ -23,6 +23,14 @@
           <el-tag :type="STATUS_TAG[row.status]">{{ row.status === 'pending' ? '待绑定' : STATUS_TEXT[row.status] }}</el-tag>
         </template>
       </el-table-column>
+      <el-table-column label="在线" width="80" align="center">
+        <template #default="{ row }">
+          <el-tag :type="row.online ? 'success' : 'info'" effect="dark" size="small">{{ row.online ? '在线' : '离线' }}</el-tag>
+        </template>
+      </el-table-column>
+      <el-table-column label="背景" width="80" align="center">
+        <template #default="{ row }">{{ BG_TEXT[row.background] || BG_TEXT.black }}</template>
+      </el-table-column>
       <el-table-column label="最后在线" width="150">
         <template #default="{ row }">{{ fmtTime(row.lastSeenAt) }}</template>
       </el-table-column>
@@ -50,6 +58,12 @@
         <el-form-item label="摆放地点" prop="location">
           <el-input v-model.trim="dialog.form.location" maxlength="60" />
         </el-form-item>
+        <el-form-item v-if="dialog.mode === 'edit'" label="背景" prop="background">
+          <el-radio-group v-model="dialog.form.background">
+            <el-radio value="black">黑色</el-radio>
+            <el-radio value="white">白色</el-radio>
+          </el-radio-group>
+        </el-form-item>
       </el-form>
       <template #footer>
         <el-button @click="dialog.open = false">取消</el-button>
@@ -65,10 +79,11 @@ import { onMounted, reactive, ref } from 'vue';
 import { api } from '../../api.js';
 import { STATUS_TAG, STATUS_TEXT, fmtTime } from '../../store.js';
 
+const BG_TEXT = { black: '黑色', white: '白色' };
 const items = ref([]);
 const loading = ref(false);
 const formRef = ref();
-const dialog = reactive({ open: false, mode: 'bind', id: null, saving: false, form: { code: '', name: '', location: '' } });
+const dialog = reactive({ open: false, mode: 'bind', id: null, saving: false, form: { code: '', name: '', location: '', background: 'black' } });
 
 const rules = {
   code: [{ required: true, pattern: /^[A-Za-z0-9]{8}$/, message: '设备码为 8 位字母或数字', trigger: 'blur' }],
@@ -87,22 +102,22 @@ async function load() {
 }
 
 function openBind(row) {
-  Object.assign(dialog, { open: true, mode: 'bind', id: null, form: { code: row?.code ?? '', name: '', location: '' } });
+  Object.assign(dialog, { open: true, mode: 'bind', id: null, form: { code: row?.code ?? '', name: '', location: '', background: 'black' } });
 }
 
 function openEdit(row) {
-  Object.assign(dialog, { open: true, mode: 'edit', id: row.id, form: { code: row.code, name: row.name, location: row.location } });
+  Object.assign(dialog, { open: true, mode: 'edit', id: row.id, form: { code: row.code, name: row.name, location: row.location, background: row.background || 'black' } });
 }
 
 async function submit() {
   if (!(await formRef.value.validate().catch(() => false))) return;
   dialog.saving = true;
   try {
-    const { code, name, location } = dialog.form;
+    const { code, name, location, background } = dialog.form;
     if (dialog.mode === 'bind') {
       await api('admin/devices/bind', { method: 'POST', body: { code: code.toUpperCase(), name, location } });
     } else {
-      await api(`admin/devices/${dialog.id}`, { method: 'PATCH', body: { name, location } });
+      await api(`admin/devices/${dialog.id}`, { method: 'PATCH', body: { name, location, background } });
     }
     ElMessage.success('已保存');
     dialog.open = false;
