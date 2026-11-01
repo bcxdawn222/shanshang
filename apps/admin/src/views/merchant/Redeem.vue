@@ -181,9 +181,6 @@ onMounted(loadRecords);
 </script>
 
 <style scoped>
-.redeem {
-  max-width: 900px;
-}
 .block {
   margin-bottom: 16px;
 }

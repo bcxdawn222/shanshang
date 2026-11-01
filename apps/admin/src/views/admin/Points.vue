@@ -101,31 +101,45 @@
 
       <!-- 积分配置 -->
       <el-tab-pane label="积分配置" name="config">
-        <el-card shadow="never" style="max-width: 660px">
+        <el-card shadow="never">
           <el-form ref="cfgRef" v-loading="cLoading" :model="cfg" :rules="cfgRules" label-width="130px" @submit.prevent="saveConfig">
-            <el-form-item label="每分钟扣费" prop="pointsPerMinute">
-              <el-input-number v-model="cfg.pointsPerMinute" :min="0.01" :max="100" :step="0.1" :precision="2" />
-              <span class="unit">积分 / 分钟，按秒累计</span>
-            </el-form-item>
-            <el-form-item label="隐藏阈值" prop="hideThreshold">
-              <el-input-number v-model="cfg.hideThreshold" :min="0" :max="100000" :precision="2" />
-              <span class="unit">积分，余额低于此值服饰暂停展示</span>
-            </el-form-item>
-            <el-form-item label="单次试穿上限" prop="tryonMaxMinutes">
-              <el-input-number v-model="cfg.tryonMaxMinutes" :min="1" :max="30" :step="1" :precision="0" />
-              <span class="unit">分钟</span>
-            </el-form-item>
-            <el-form-item label="待机进入播放" prop="idleMinutes">
-              <el-input-number v-model="cfg.idleMinutes" :min="1" :max="60" :step="1" :precision="0" />
-              <span class="unit">分钟无操作进入广告播放；试穿中会先结束试穿</span>
-            </el-form-item>
-            <el-form-item label="Xmax 换算比例" prop="xmaxRatio">
-              <el-input v-model.trim="cfg.xmaxRatio" maxlength="20" placeholder="平台积分 : Xmax 积分，如 1:10" style="width: 220px" />
-              <span class="unit">仅总后台可见，商家不可见</span>
-            </el-form-item>
-            <el-form-item label="充值联系方式" prop="rechargeContact">
-              <el-input v-model.trim="cfg.rechargeContact" maxlength="200" show-word-limit placeholder="如：微信 xxx / 电话 xxx" />
-            </el-form-item>
+            <el-row :gutter="24">
+              <el-col :xs="24" :lg="12">
+                <el-form-item label="每分钟扣费" prop="pointsPerMinute">
+                  <el-input-number v-model="cfg.pointsPerMinute" :min="0.01" :max="100" :step="0.1" :precision="2" />
+                  <span class="unit">积分 / 分钟，按秒累计</span>
+                </el-form-item>
+              </el-col>
+              <el-col :xs="24" :lg="12">
+                <el-form-item label="隐藏阈值" prop="hideThreshold">
+                  <el-input-number v-model="cfg.hideThreshold" :min="0" :max="100000" :precision="2" />
+                  <span class="unit">积分，余额低于此值服饰暂停展示</span>
+                </el-form-item>
+              </el-col>
+              <el-col :xs="24" :lg="12">
+                <el-form-item label="单次试穿上限" prop="tryonMaxMinutes">
+                  <el-input-number v-model="cfg.tryonMaxMinutes" :min="1" :max="30" :step="1" :precision="0" />
+                  <span class="unit">分钟</span>
+                </el-form-item>
+              </el-col>
+              <el-col :xs="24" :lg="12">
+                <el-form-item label="待机进入播放" prop="idleMinutes">
+                  <el-input-number v-model="cfg.idleMinutes" :min="1" :max="60" :step="1" :precision="0" />
+                  <span class="unit">分钟无操作进入广告播放；试穿中会先结束试穿</span>
+                </el-form-item>
+              </el-col>
+              <el-col :xs="24" :lg="12">
+                <el-form-item label="Xmax 换算比例" prop="xmaxRatio">
+                  <el-input v-model.trim="cfg.xmaxRatio" maxlength="20" placeholder="平台积分 : Xmax 积分，如 1:10" style="width: 220px" />
+                  <span class="unit">仅总后台可见，商家不可见</span>
+                </el-form-item>
+              </el-col>
+              <el-col :xs="24" :lg="12">
+                <el-form-item label="充值联系方式" prop="rechargeContact">
+                  <el-input v-model.trim="cfg.rechargeContact" maxlength="200" show-word-limit placeholder="如：微信 xxx / 电话 xxx" />
+                </el-form-item>
+              </el-col>
+            </el-row>
             <el-form-item>
               <el-button type="primary" native-type="submit" :loading="cSaving">保存</el-button>
             </el-form-item>

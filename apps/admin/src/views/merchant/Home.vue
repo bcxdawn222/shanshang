@@ -22,52 +22,70 @@
       :title="`余额低于 ${fmtPoints(points.hideThreshold)} 积分，服饰已暂停在设备展示，请充值`"
     />
 
-    <el-card v-if="account.status === 'approved' && points" shadow="never" class="card">
-      <template #header>
-        <div class="page-head" style="margin: 0">
-          <span>积分余额</span>
-          <el-button link type="primary" @click="router.push('/merchant/points')">积分与充值</el-button>
-        </div>
-      </template>
-      <el-descriptions :column="2" border>
-        <el-descriptions-item label="当前余额">
-          <span :style="points.balance < 0 ? { color: 'var(--el-color-danger)' } : undefined">{{ fmtPoints(points.balance) }} 积分</span>
-        </el-descriptions-item>
-        <el-descriptions-item label="累计试穿时长">{{ fmtDuration(points.usageMs) }}</el-descriptions-item>
-      </el-descriptions>
-    </el-card>
+    <!-- 统计卡片：宽屏一行三块，窄屏一块一行 -->
+    <el-row v-if="account.status === 'approved' && points" :gutter="16">
+      <el-col :xs="24" :sm="8">
+        <el-card shadow="never" class="card">
+          <div class="stat-title">当前余额</div>
+          <div class="stat-value" :style="points.balance < 0 ? { color: 'var(--el-color-danger)' } : undefined">
+            {{ fmtPoints(points.balance) }} <span class="stat-unit">积分</span>
+          </div>
+        </el-card>
+      </el-col>
+      <el-col :xs="24" :sm="8">
+        <el-card shadow="never" class="card">
+          <div class="stat-title">累计试穿时长</div>
+          <div class="stat-value">{{ fmtDuration(points.usageMs) }}</div>
+        </el-card>
+      </el-col>
+      <el-col :xs="24" :sm="8">
+        <el-card shadow="never" class="card">
+          <div class="stat-title">积分与充值</div>
+          <div class="stat-value">
+            <el-button type="primary" link @click="router.push('/merchant/points')">查看流水 / 去充值</el-button>
+          </div>
+        </el-card>
+      </el-col>
+    </el-row>
 
-    <el-card shadow="never" class="card">
-      <template #header>账号信息</template>
-      <el-descriptions :column="2" border>
-        <el-descriptions-item label="用户名">{{ account.username }}</el-descriptions-item>
-        <el-descriptions-item label="状态">
-          <el-tag :type="STATUS_TAG[account.status]">{{ STATUS_TEXT[account.status] }}</el-tag>
-        </el-descriptions-item>
-        <el-descriptions-item label="品牌名称">
-          {{ m.brandName }}
-          <span class="muted">（如需修改请联系管理员）</span>
-        </el-descriptions-item>
-        <el-descriptions-item label="服饰格位">{{ m.slotQuota }} 格</el-descriptions-item>
-        <el-descriptions-item label="联系方式">{{ m.contact || '—' }}</el-descriptions-item>
-        <el-descriptions-item label="注册时间">{{ fmtTime(account.createdAt) }}</el-descriptions-item>
-      </el-descriptions>
-    </el-card>
+    <!-- 账号信息 + 资料设置：宽屏左右并排，窄屏上下堆叠 -->
+    <el-row :gutter="16">
+      <el-col :xs="24" :lg="account.status === 'approved' ? 14 : 24">
+        <el-card shadow="never" class="card">
+          <template #header>账号信息</template>
+          <el-descriptions :column="2" border>
+            <el-descriptions-item label="用户名">{{ account.username }}</el-descriptions-item>
+            <el-descriptions-item label="状态">
+              <el-tag :type="STATUS_TAG[account.status]">{{ STATUS_TEXT[account.status] }}</el-tag>
+            </el-descriptions-item>
+            <el-descriptions-item label="品牌名称">
+              {{ m.brandName }}
+              <span class="muted">（如需修改请联系管理员）</span>
+            </el-descriptions-item>
+            <el-descriptions-item label="服饰格位">{{ m.slotQuota }} 格</el-descriptions-item>
+            <el-descriptions-item label="联系方式">{{ m.contact || '—' }}</el-descriptions-item>
+            <el-descriptions-item label="注册时间">{{ fmtTime(account.createdAt) }}</el-descriptions-item>
+          </el-descriptions>
+        </el-card>
+      </el-col>
 
-    <el-card v-if="account.status === 'approved'" shadow="never" class="card">
-      <template #header>资料设置</template>
-      <el-form :model="form" label-width="96px" style="max-width: 520px" @submit.prevent="save">
-        <el-form-item label="昵称">
-          <el-input v-model.trim="form.nickname" maxlength="30" />
-        </el-form-item>
-        <el-form-item label="店铺位置">
-          <el-input v-model.trim="form.shopLocation" maxlength="60" placeholder="如：3F-A12 某某女装，试穿时显示在屏幕角落" />
-        </el-form-item>
-        <el-form-item>
-          <el-button type="primary" native-type="submit" :loading="saving">保存</el-button>
-        </el-form-item>
-      </el-form>
-    </el-card>
+      <el-col v-if="account.status === 'approved'" :xs="24" :lg="10">
+        <el-card shadow="never" class="card">
+          <template #header>资料设置</template>
+          <el-form :model="form" label-width="80px" @submit.prevent="save">
+            <el-form-item label="昵称">
+              <el-input v-model.trim="form.nickname" maxlength="30" />
+            </el-form-item>
+            <el-form-item label="店铺位置">
+              <el-input v-model.trim="form.shopLocation" maxlength="60" placeholder="如：3F-A12 某某女装，试穿时显示在屏幕角落" />
+            </el-form-item>
+            <el-form-item>
+              <el-button type="primary" native-type="submit" :loading="saving">保存</el-button>
+            </el-form-item>
+          </el-form>
+        </el-card>
+      </el-col>
+    </el-row>
   </div>
 </template>
 
@@ -125,5 +143,19 @@ async function save() {
 <style scoped>
 .card {
   margin-bottom: 16px;
+}
+.stat-title {
+  color: var(--el-text-color-secondary);
+  font-size: 13px;
+}
+.stat-value {
+  margin-top: 8px;
+  font-size: 22px;
+  font-weight: 600;
+  line-height: 32px;
+}
+.stat-unit {
+  font-size: 13px;
+  font-weight: 400;
 }
 </style>

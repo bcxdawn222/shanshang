@@ -1,15 +1,23 @@
 <template>
-  <el-card shadow="never" style="max-width: 620px">
+  <el-card shadow="never">
     <el-form :model="form" label-width="100px" @submit.prevent="save">
-      <el-form-item label="平台名称">
-        <el-input v-model.trim="form.platformName" maxlength="20" />
-      </el-form-item>
-      <el-form-item label="Logo 地址">
-        <el-input v-model.trim="form.logoUrl" placeholder="留空用默认占位；http(s) 地址或站内路径" />
-      </el-form-item>
-      <el-form-item label="登录页背景">
-        <el-input v-model.trim="form.loginBgUrl" placeholder="留空用渐变占位；http(s) 地址或站内路径" />
-      </el-form-item>
+      <el-row :gutter="24">
+        <el-col :xs="24" :md="12" :lg="8">
+          <el-form-item label="平台名称">
+            <el-input v-model.trim="form.platformName" maxlength="20" />
+          </el-form-item>
+        </el-col>
+        <el-col :xs="24" :md="12" :lg="8">
+          <el-form-item label="Logo 地址">
+            <el-input v-model.trim="form.logoUrl" placeholder="留空用默认占位；http(s) 地址或站内路径" />
+          </el-form-item>
+        </el-col>
+        <el-col :xs="24" :md="12" :lg="8">
+          <el-form-item label="登录页背景">
+            <el-input v-model.trim="form.loginBgUrl" placeholder="留空用渐变占位；http(s) 地址或站内路径" />
+          </el-form-item>
+        </el-col>
+      </el-row>
       <el-form-item>
         <el-button type="primary" native-type="submit" :loading="saving">保存</el-button>
         <span class="muted" style="margin-left: 12px">商家端只读，不能修改</span>

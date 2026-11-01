@@ -1,12 +1,18 @@
 <template>
-  <el-card v-loading="loading" shadow="never" style="max-width: 660px">
+  <el-card v-loading="loading" shadow="never">
     <el-form :model="form" label-width="110px" @submit.prevent="save">
-      <el-form-item label="联系电话">
-        <el-input v-model.trim="form.contactPhone" maxlength="50" placeholder="商家在“联系我们”页看到" />
-      </el-form-item>
-      <el-form-item label="地址">
-        <el-input v-model.trim="form.contactAddress" maxlength="200" show-word-limit />
-      </el-form-item>
+      <el-row :gutter="24">
+        <el-col :xs="24" :md="12" :lg="8">
+          <el-form-item label="联系电话">
+            <el-input v-model.trim="form.contactPhone" maxlength="50" placeholder="商家在“联系我们”页看到" />
+          </el-form-item>
+        </el-col>
+        <el-col :xs="24" :md="12" :lg="16">
+          <el-form-item label="地址">
+            <el-input v-model.trim="form.contactAddress" maxlength="200" show-word-limit />
+          </el-form-item>
+        </el-col>
+      </el-row>
       <el-form-item>
         <el-button type="primary" native-type="submit" :loading="saving">保存</el-button>
       </el-form-item>
@@ -15,32 +21,36 @@
     <el-divider />
 
     <el-form label-width="110px">
-      <el-form-item v-for="q in QRS" :key="q.kind" :label="q.label">
-        <div>
-          <el-image
-            v-if="info[q.field]"
-            :src="mediaUrl(info[q.field])"
-            :preview-src-list="[mediaUrl(info[q.field])]"
-            preview-teleported
-            fit="contain"
-            class="qr"
-            :alt="q.label"
-          />
-          <div v-else class="muted">尚未上传</div>
-          <div class="ops">
-            <input
-              :ref="(el) => (inputs[q.kind] = el)"
-              type="file"
-              accept="image/jpeg,image/png,image/webp"
-              :aria-label="q.label"
-              hidden
-              @change="(e) => upload(q.kind, e)"
-            />
-            <el-button :loading="uploading === q.kind" @click="inputs[q.kind].click()">{{ info[q.field] ? '更换' : '上传' }}</el-button>
-            <span class="muted">JPG / PNG / WebP，不超过 10MB；{{ q.tip }}</span>
-          </div>
-        </div>
-      </el-form-item>
+      <el-row :gutter="24">
+        <el-col v-for="q in QRS" :key="q.kind" :xs="24" :md="12">
+          <el-form-item :label="q.label">
+            <div>
+              <el-image
+                v-if="info[q.field]"
+                :src="mediaUrl(info[q.field])"
+                :preview-src-list="[mediaUrl(info[q.field])]"
+                preview-teleported
+                fit="contain"
+                class="qr"
+                :alt="q.label"
+              />
+              <div v-else class="muted">尚未上传</div>
+              <div class="ops">
+                <input
+                  :ref="(el) => (inputs[q.kind] = el)"
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp"
+                  :aria-label="q.label"
+                  hidden
+                  @change="(e) => upload(q.kind, e)"
+                />
+                <el-button :loading="uploading === q.kind" @click="inputs[q.kind].click()">{{ info[q.field] ? '更换' : '上传' }}</el-button>
+                <span class="muted">JPG / PNG / WebP，不超过 10MB；{{ q.tip }}</span>
+              </div>
+            </div>
+          </el-form-item>
+        </el-col>
+      </el-row>
     </el-form>
   </el-card>
 </template>
@@ -119,6 +129,7 @@ async function upload(kind, e) {
 }
 .ops {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: 12px;
   margin-top: 8px;

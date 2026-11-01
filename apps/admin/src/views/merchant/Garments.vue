@@ -16,16 +16,22 @@
         <img :src="mediaUrl(g.imagePath)" :alt="g.title" class="thumb" />
         <div class="info">
           <div class="name" :title="g.title">{{ g.title }}</div>
-          <div class="tags">
-            {{ dicts.genders?.[g.gender] }} · {{ dicts.setTypes?.[g.setType] }} · {{ g.category }} · {{ g.color }}
+          <!-- 卡片上只写状态（训练中 + 倒计时）；训练周期长说明只在上传弹窗里显示 -->
+          <div class="status">
+            <el-tag :type="GARMENT_TAG[g.status]" size="small">{{ statusText(g) }}</el-tag>
+            <span v-if="g.status === 'reviewing'" class="countdown">{{ countdown(g.availableAt) }}</span>
           </div>
-          <el-tag :type="GARMENT_TAG[g.status]" size="small">{{ statusText(g) }}</el-tag>
-          <template v-if="g.status === 'reviewing'">
-            <div class="countdown">{{ countdown(g.availableAt) }}</div>
-            <div class="notice">{{ TRAIN_NOTICE }}</div>
-          </template>
-          <div v-if="g.status === 'rejected'" class="notice danger">驳回原因：{{ g.reviewNote || '未填写' }}</div>
-          <div class="ops">
+          <!-- 其余小字放左下角，操作放右下角 -->
+          <div class="foot">
+            <div class="foot-left">
+              <div v-if="g.status === 'rejected'" class="notice danger" :title="g.reviewNote || '未填写'">
+                驳回：{{ g.reviewNote || '未填写' }}
+              </div>
+              <div class="tags">
+                {{ dicts.genders?.[g.gender] }} · {{ dicts.setTypes?.[g.setType] }} · {{ g.category }} · {{ g.color }}
+              </div>
+            </div>
+            <div class="ops">
             <el-button v-if="g.status === 'reviewing' || g.status === 'ready'" link type="warning" @click="act(g, 'offline', '已下架')">
               下架
             </el-button>
@@ -33,6 +39,7 @@
               上架
             </el-button>
             <el-button link type="danger" @click="remove(g)">删除</el-button>
+            </div>
           </div>
         </div>
       </el-card>
@@ -282,12 +289,45 @@ onUnmounted(() => clearInterval(timer));
   object-fit: cover;
   background: var(--el-fill-color-light);
 }
-.info {
-  padding: 10px;
+/* 卡片纵向撑满格子，底栏（左下小字 / 右下操作）贴底 */
+.cell.el-card {
   display: flex;
   flex-direction: column;
-  gap: 6px;
-  align-items: flex-start;
+}
+.cell :deep(.el-card__body) {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+.info {
+  flex: 1;
+  padding: 10px 12px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.status {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.foot {
+  margin-top: auto;
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 8px;
+}
+.foot-left {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.foot-left .notice {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 .name {
   font-weight: 600;
@@ -314,7 +354,11 @@ onUnmounted(() => clearInterval(timer));
   color: var(--el-color-danger);
 }
 .ops {
-  margin-top: 2px;
+  flex-shrink: 0;
+  display: flex;
+}
+.ops .el-button + .el-button {
+  margin-left: 8px;
 }
 .add {
   display: flex;

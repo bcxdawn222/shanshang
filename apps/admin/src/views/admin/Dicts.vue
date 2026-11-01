@@ -8,7 +8,7 @@
     </div>
     <p class="muted">停用后商家上传时不能再选，已上架服饰不受影响。标签不能删除，避免已有服饰丢失分类。</p>
 
-    <el-table v-loading="loading" :data="rows" border stripe empty-text="暂无数据" style="max-width: 640px">
+    <el-table v-loading="loading" :data="rows" border stripe empty-text="暂无数据">
       <el-table-column prop="name" label="名称" min-width="160" />
       <el-table-column label="启用" width="100" align="center">
         <template #default="{ row }">

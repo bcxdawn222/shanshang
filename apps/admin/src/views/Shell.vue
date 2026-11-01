@@ -3,11 +3,21 @@
     <el-aside width="200px" class="aside">
       <Brand class="aside-brand" />
       <div class="role">{{ isAdmin ? '总后台' : '商家后台' }}</div>
-      <el-menu :default-active="route.path" router class="menu">
-        <el-menu-item v-for="m in menus" :key="m.path" :index="m.path">
-          <el-icon><component :is="m.icon" /></el-icon>
-          <span>{{ m.title }}</span>
-        </el-menu-item>
+      <!-- 相关栏目合并成分组，点开再选二级功能；当前页所在分组默认展开 -->
+      <el-menu :default-active="route.path" :default-openeds="openeds" router class="menu">
+        <template v-for="m in menus" :key="m.path || m.title">
+          <el-sub-menu v-if="m.children" :index="m.title">
+            <template #title>
+              <el-icon><component :is="m.icon" /></el-icon>
+              <span>{{ m.title }}</span>
+            </template>
+            <el-menu-item v-for="c in m.children" :key="c.path" :index="c.path">{{ c.title }}</el-menu-item>
+          </el-sub-menu>
+          <el-menu-item v-else :index="m.path">
+            <el-icon><component :is="m.icon" /></el-icon>
+            <span>{{ m.title }}</span>
+          </el-menu-item>
+        </template>
       </el-menu>
     </el-aside>
     <!-- 顶栏换成 GlassNavbar 后 el-container 识别不到 ElHeader，需显式 vertical -->
@@ -42,29 +52,19 @@
 
 <script setup>
 import {
-  Camera,
   ChatDotRound,
   Coin,
-  CollectionTag,
   DataLine,
-  Document,
-  Film,
   Key,
   MagicStick,
   Monitor,
   Moon,
-  OfficeBuilding,
-  Phone,
   Picture,
-  Present,
   Setting,
   Shop,
   Stamp,
   Sunny,
-  Tickets,
-  TrendCharts,
   User,
-  VideoPlay,
   Wallet,
 } from '@element-plus/icons-vue';
 import { computed, watchEffect } from 'vue';
@@ -80,27 +80,57 @@ const isAdmin = computed(() => store.account?.role === 'admin');
 // 总后台始终白色；商家后台按本地保存的主题
 watchEffect(() => applyTheme(store.account?.role));
 
-// 菜单只是入口，权限以服务端为准
+// 菜单只是入口，权限以服务端为准；有 children 的是分组（二级菜单）
 const menus = computed(() =>
   isAdmin.value
     ? [
-        { path: '/admin/merchants', title: '商家管理', icon: Shop },
-        { path: '/admin/garments', title: '服饰审核', icon: Picture },
-        { path: '/admin/dicts', title: '标签字典', icon: CollectionTag },
-        { path: '/admin/devices', title: '设备管理', icon: Monitor },
-        { path: '/admin/ads', title: '广告素材', icon: Film },
-        { path: '/admin/playlists', title: '播放列表', icon: VideoPlay },
-        { path: '/admin/hot', title: '热门榜', icon: TrendCharts },
-        { path: '/admin/dramas', title: '短剧专题', icon: Tickets },
-        { path: '/admin/fun', title: '玩法配置', icon: MagicStick },
-        { path: '/admin/points', title: '积分管理', icon: Coin },
-        { path: '/admin/snapshots', title: '快照核销', icon: Camera },
+        {
+          title: '商家与服饰',
+          icon: Shop,
+          children: [
+            { path: '/admin/merchants', title: '商家管理' },
+            { path: '/admin/garments', title: '服饰审核' },
+            { path: '/admin/dicts', title: '标签字典' },
+          ],
+        },
+        {
+          title: '设备与投放',
+          icon: Monitor,
+          children: [
+            { path: '/admin/devices', title: '设备管理' },
+            { path: '/admin/ads', title: '广告素材' },
+            { path: '/admin/playlists', title: '播放列表' },
+          ],
+        },
+        {
+          title: '内容运营',
+          icon: MagicStick,
+          children: [
+            { path: '/admin/hot', title: '热门榜' },
+            { path: '/admin/dramas', title: '短剧专题' },
+            { path: '/admin/fun', title: '玩法配置' },
+          ],
+        },
+        {
+          title: '积分与核销',
+          icon: Coin,
+          children: [
+            { path: '/admin/points', title: '积分管理' },
+            { path: '/admin/snapshots', title: '快照核销' },
+          ],
+        },
         { path: '/admin/stats', title: '数据统计', icon: DataLine },
-        { path: '/admin/feedback', title: '留言反馈', icon: ChatDotRound },
-        { path: '/admin/settings', title: '平台设置', icon: Setting },
-        { path: '/admin/site-extras', title: '站点信息', icon: OfficeBuilding },
-        { path: '/admin/audit-logs', title: '操作日志', icon: Document },
-        { path: '/admin/password', title: '修改口令', icon: Key },
+        {
+          title: '系统设置',
+          icon: Setting,
+          children: [
+            { path: '/admin/settings', title: '平台设置' },
+            { path: '/admin/site-extras', title: '站点信息' },
+            { path: '/admin/feedback', title: '留言反馈' },
+            { path: '/admin/audit-logs', title: '操作日志' },
+            { path: '/admin/password', title: '修改口令' },
+          ],
+        },
       ]
     : [
         { path: '/merchant/home', title: '账号概览', icon: User },
@@ -108,11 +138,22 @@ const menus = computed(() =>
         { path: '/merchant/points', title: '积分与充值', icon: Wallet },
         { path: '/merchant/redeem', title: '核销', icon: Stamp },
         { path: '/merchant/stats', title: '数据统计', icon: DataLine },
-        { path: '/merchant/contact', title: '联系我们', icon: Phone },
-        { path: '/merchant/feedback', title: '留言反馈', icon: ChatDotRound },
-        { path: '/merchant/tip', title: '打赏作者', icon: Present },
+        {
+          title: '帮助与反馈',
+          icon: ChatDotRound,
+          children: [
+            { path: '/merchant/contact', title: '联系我们' },
+            { path: '/merchant/feedback', title: '留言反馈' },
+            { path: '/merchant/tip', title: '打赏作者' },
+          ],
+        },
         { path: '/merchant/password', title: '修改密码', icon: Key },
       ],
+);
+
+// 当前页所在的分组默认展开
+const openeds = computed(() =>
+  menus.value.filter((m) => m.children?.some((c) => c.path === route.path)).map((m) => m.title),
 );
 
 async function onLogout() {
@@ -146,6 +187,22 @@ async function onLogout() {
 }
 .menu {
   border-right: none;
+}
+/* 分组标题与一级菜单项同样的胶囊样式；二级项缩进对齐分组文字（glass.css 对一级项强制了 12px 左边距） */
+.menu :deep(.el-sub-menu__title) {
+  height: 40px;
+  line-height: 40px;
+  margin: 2px 10px;
+  padding-left: 12px !important;
+  border-radius: 10px;
+}
+.menu :deep(.el-sub-menu .el-menu) {
+  padding: 0;
+}
+.menu :deep(.el-sub-menu .el-menu-item) {
+  height: 36px;
+  line-height: 36px;
+  padding-left: 42px !important;
 }
 /* 玻璃面 / 吸顶 / 高度由 GlassNavbar 负责；它是 el-main 的兄弟节点，可以带 backdrop-filter */
 .header {

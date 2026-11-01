@@ -1,5 +1,5 @@
 <template>
-  <el-card v-loading="loading" shadow="never" style="max-width: 420px">
+  <el-card v-loading="loading" shadow="never">
     <div class="tip">
       <el-image
         v-if="qrUrl"

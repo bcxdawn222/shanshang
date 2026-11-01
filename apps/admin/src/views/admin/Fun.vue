@@ -19,7 +19,7 @@
           </el-radio-button>
         </el-radio-group>
 
-        <el-table v-loading="loading" :data="wheel[zodiac] ?? []" border empty-text="暂无格子" style="max-width: 760px">
+        <el-table v-loading="loading" :data="wheel[zodiac] ?? []" border empty-text="暂无格子">
           <el-table-column label="#" width="50" align="center">
             <template #default="{ $index }">{{ $index + 1 }}</template>
           </el-table-column>
@@ -73,7 +73,7 @@
             <h3>{{ gText }}（{{ options[group].length }}/{{ OPTION_MAX }}）</h3>
             <el-button :disabled="options[group].length >= OPTION_MAX" @click="editOption(group, -1)">新增{{ gText }}</el-button>
           </div>
-          <el-table v-loading="loading" :data="options[group]" border empty-text="至少保留一项" style="max-width: 900px">
+          <el-table v-loading="loading" :data="options[group]" border empty-text="至少保留一项">
             <el-table-column prop="key" label="标识" width="130" />
             <el-table-column prop="label" label="名称" width="120" />
             <el-table-column label="权重" min-width="300">
@@ -110,7 +110,7 @@
             <div v-for="(tText, tier) in TIERS" :key="tier" class="list-block">
               <div class="list-title">{{ tText }}（{{ fortune.templates[tier].length }}）</div>
               <div v-for="(_, i) in fortune.templates[tier]" :key="i" class="list-row">
-                <el-input v-model="fortune.templates[tier][i]" :maxlength="TEMPLATE_MAX" show-word-limit :aria-label="`${tText}第 ${i + 1} 条`" style="max-width: 640px" />
+                <el-input v-model="fortune.templates[tier][i]" :maxlength="TEMPLATE_MAX" show-word-limit :aria-label="`${tText}第 ${i + 1} 条`" class="grow" />
                 <el-button link type="danger" :disabled="fortune.templates[tier].length <= 1" @click="fortune.templates[tier].splice(i, 1)">删除</el-button>
               </div>
               <el-button size="small" :disabled="fortune.templates[tier].length >= FORTUNE_LIST_MAX" @click="fortune.templates[tier].push('')">新增模板</el-button>
@@ -133,7 +133,7 @@
 
           <div class="group">
             <h3>幸运色（{{ fortune.luckyColors.length }}/{{ LUCKY_COLOR_MAX }}）</h3>
-            <el-table :data="fortune.luckyColors" border empty-text="至少保留一项" style="max-width: 600px">
+            <el-table :data="fortune.luckyColors" border empty-text="至少保留一项">
               <el-table-column label="#" width="50" align="center">
                 <template #default="{ $index }">{{ $index + 1 }}</template>
               </el-table-column>
@@ -518,6 +518,10 @@ onMounted(load);
   align-items: center;
   gap: 8px;
   margin-bottom: 8px;
+}
+.list-row .grow {
+  flex: 1;
+  min-width: 0;
 }
 .words {
   display: flex;
